@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="transfer">
+
+<select  id="getAppliedPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+	select pm.program_id as code, pm.program_name as description from applicant_program_registration as apr
+	join student_registration as sr on sr.registration_number = apr.registration_number
+	and sr.program_id = apr.program_id and apr.session_start_date = sr.start_date
+	and apr.session_end_date = sr.end_date
+	join system_values as sv
+	on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))=apr.session_start_date
+	and concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))=apr.session_end_date
+	and sv.code='ADMSSN'
+	join program_master as pm on pm.program_id = apr.program_id
+	join entity_student as es on es.application_number = apr.application_number and sr.student_id = es.student_id
+	where apr.application_number=#applicationNumber# and es.date_of_birth=#dob#;
+</select>
+
+<select id="getTransferPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_id code, pm.program_name description from program_form as pf
+join program_master as pm on pm.program_id = pf.program_id
+where pf.form_number='0013'
+order by pm.program_name asc;
+</select>
+
+<select id="checkApplication" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_name code, pm2.program_name description, es.first_name otherProperty1 from transfer_applications as ta
+join program_master as pm on pm.program_id = ta.from_program
+join program_master as pm2 on pm2.program_id = ta.to_program
+join entity_student as es on es.application_number = ta.application_number
+where ta.application_number = #otherProperty1# and ta.from_program=#code#;
+</select>
+
+<insert id="insertTransferApplication">
+insert into transfer_applications
+values (#otherProperty1#,#code#,#description#, now());
+</insert>
+</sqlMap>

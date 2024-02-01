@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="account">
+
+<insert id="insertAPNUMB">
+	insert into system_values (university_id, code, value, insert_time, creator_id)
+	values (#universityID#,'APNUMB','1',now(),'Administrator');
+</insert>
+
+<select id="getAppNumber" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select sv.value as code, substring(sv2.value,3,2) as otherProperty1 from system_values as sv
+join university_master as um on um.university_code=sv.university_id and sv.code='APNUMB'
+join system_values as sv2 on sv.university_id=sv2.university_id and sv2.code='ADMSSN'
+where um.current_status='1' and um.university_code=#universityID#;
+</select>
+
+ <select id="getUserList" resultClass="in.ac.dei.edrp.admissionsystem.common.beans.Applicant">
+select es.first_name as applicantName, es.father_first_name as fatherName, es.mother_first_name as motherName,
+es.guardian_name as guardianName, es.date_of_birth as dob,  es.gender, es.category_code as category, es.nationality,
+es.religion, es.primary_email_id as primaryEmailID, es.secondary_email_id as secondaryEmailID,
+es.minority, es.marital_status as maritalStatus, es.physical_handicap as pwd,
+aam.address_line1 as corAddressL1, aam.address_line2 as corAddressL2, aam.state as corState, aam.city as corCity, aam.pincode as corPincode,
+aam2.address_line1 as perAddressL1, aam2.address_line2 as perAddressL2, aam2.state as perState, aam2.city as perCity, aam2.pincode as perPincode,aam2.country as perCountry,
+aam.home_phone as homePhone, aam.other_phone as otherPhone, aam.country, es.student_id as userID,
+es.application_number as applicationNumber, sas.application_status as applicationStatus,sas.tab_status as tabStatus,
+es.father_income as fatherIncome, es.mother_income as motherIncome, es.guardian_income as guardianIncome, es.locality,
+sas.session_start_date as sessionStartDate, sas.session_end_date as sessionEndDate,es.student_id as userID,
+day(es.date_of_birth) as dd,month(es.date_of_birth) as mm,year(es.date_of_birth) as yyyy, sas.university_id as universityID, concat_ws('-',substring(sv.value,1,4), substring(sv.value,9,4)) as sessionCombined,
+sas.verification_status as verificationStatus, sv2.value phaseOptionToShow,
+sas.force_editing as forceEditing, sv3.value as globalEditing, sas.phase2_edited as phase2Edited
+,journals as publishedPapers, journal_description as journalDesc, conferences as conferences,
+conference_description as conferencesDesc, ret_qualified as retQualified, ret_remarks as retRemarks,
+fellowship as fellowship, fellowship_description as fellowshipDesc, jrf as jrfQualified,
+institute_teacher as instituteTeacher, scholar as deiScholor, fellow_mphil as deiMphil,
+medal as deiMedalWinner, DEI_PG as deiPG, CGPA9 as cgpa9, ret_roll_number as retRollNumber, ret_year as retYear, recipient_type as recipientType,
+es.minority minority, sas.application_document_path as applicationDocumentPath
+, datediff(concat_ws('-',substring(sv.value,1,4),'07','01'),es.date_of_birth)/365.25 as ageOnJuly <!-- Added for Age and Gender Eligibility by Arjun on 04-04-2016 -->
+, es.aadhar_number aadharNumber, es.blood_group bloodGroup, afp.fee_password feePassword, es.ews, es.kashmiri_pandit kashmiriPandit,
+es.applicant_name_hi applicantNameHi, es.father_name_hi fatherNameHi, es.mother_name_hi motherNameHi, es.id_proof typeOfId, es.id_proof_no idProofNumber
+from entity_student as es
+join applicant_account_info as aai on aai.student_id=es.student_id and aai.user_name=es.application_number
+join system_values as sv on sv.university_id=es.university_id and sv.code='ADMSSN'
+join student_application_status as sas on sas.application_number=es.application_number
+  and sas.session_start_date=concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+  and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+  and sv.university_id=sas.university_id and sas.session_start_date=aai.session_start_date and sas.session_end_date=aai.session_end_date
+left join system_values as sv2 on sv.university_id = sv2.university_id and sv2.code = 'PH2OPN'
+left join system_values as sv3 on sv.university_id = sv3.university_id and sv3.code = 'EDTALD'
+left join admission_addresses_master as aam on aam.user_id=es.student_id and aam.address_key='COR'
+left join admission_addresses_master as aam2 on aam2.user_id=es.student_id and aam2.address_key='PER'
+left join ret_eligibility as re on re.student_id = es.student_id
+left join application_fee_password as afp on afp.application_number = es.application_number
+where es.application_number=#applicationNumber# and aai.status='ACT' and aai.password=sha1(#password#)
+and es.registered_in_session=concat_ws('-',substring(sv.value,1,4), substring(sv.value, 11,2))
+and sv.university_id=#universityID# and sas.tab_status!='';
+  </select>
+  
+  <select id="getUserDetails" resultClass="in.ac.dei.edrp.admissionsystem.common.beans.Applicant">
+select es.first_name as applicantName, es.father_first_name as fatherName, es.mother_first_name as motherName,
+es.guardian_name as guardianName, es.date_of_birth as dob,  es.gender, es.category_code as category, es.nationality as nationality,
+es.religion as religion, es.primary_email_id as primaryEmailID, es.secondary_email_id as secondaryEmailID,
+es.minority, es.marital_status as maritalStatus, es.physical_handicap as pwd,
+aam.address_line1 as corAddressL1, aam.address_line2 as corAddressL2, aam.state as corState, aam.city as corCity, aam.district as corDistrict, aam.pincode as corPincode,
+aam2.address_line1 as perAddressL1, aam2.address_line2 as perAddressL2, aam2.state as perState, aam2.city as perCity, aam2.district as perDistrict, aam2.pincode as perPincode,aam2.country as perCountry,
+aam.home_phone as homePhone, aam.other_phone as otherPhone, aam.country as corCountry, es.student_id as userID,
+es.application_number as applicationNumber, sas.application_status as applicationStatus,sas.tab_status as tabStatus,
+es.father_income as fatherIncome, es.mother_income as motherIncome, es.guardian_income as guardianIncome, es.locality,
+sas.session_start_date as sessionStartDate, sas.session_end_date as sessionEndDate,es.student_id as userID,
+day(es.date_of_birth) as dd,month(es.date_of_birth) as mm,year(es.date_of_birth) as yyyy, sas.university_id as universityID, concat_ws('-',substring(sv.value,1,4), substring(sv.value,9,4)) as sessionCombined, ucase(cstt.component_description) as categoryDesc, ucase(gstt.component_description) as genderDesc, concat_ws('-', day(es.date_of_birth),month(es.date_of_birth),year(es.date_of_birth)) as dobIST, if(sas.expected_fee is null or sas.expected_fee='', '', sas.expected_fee) as applicationFee,
+sas.verification_status as verificationStatus, sv2.value phaseOptionToShow,
+sas.force_editing as forceEditing, sv3.value as globalEditing, sas.phase2_edited as phase2Edited
+,journals as publishedPapers, journal_description as journalDesc, conferences as conferences,
+conference_description as conferencesDesc, ret_qualified as retQualified, ret_remarks as retRemarks,
+fellowship as fellowship, fellowship_description as fellowshipDesc, jrf as jrfQualified,
+institute_teacher as instituteTeacher, scholar as deiScholor, fellow_mphil as deiMphil,
+medal as deiMedalWinner, DEI_PG as deiPG, CGPA9 as cgpa9, ret_roll_number as retRollNumber, ret_year as retYear, recipient_type as recipientType,
+es.minority minority, sas.application_document_path as applicationDocumentPath
+,datediff(concat_ws('-',substring(sv.value,1,4),'07','01'),es.date_of_birth)/365.25 as ageOnJuly<!-- Added for Age and Gender Eligibility by Arjun on 04-04-2016 -->
+, es.aadhar_number aadharNumber, es.blood_group bloodGroup, afp.fee_password feePassword, afp.fee_password password,
+es.ews, es.kashmiri_pandit kashmiriPandit,
+es.applicant_name_hi applicantNameHi, es.father_name_hi fatherNameHi, es.mother_name_hi motherNameHi, es.id_proof typeOfId, es.id_proof_no idProofNumber,
+es.cuet_flag cuetFlag, es.cuet_app_number cuetAppNumber, es.cuet_roll_number cuetRollNumber
+from entity_student as es
+join applicant_account_info as aai on aai.student_id=es.student_id and aai.user_name=es.application_number
+join system_values as sv on sv.university_id=es.university_id and sv.code='ADMSSN'
+join student_application_status as sas on sas.application_number=es.application_number
+  and sas.session_start_date=concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+  and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+  and sv.university_id=sas.university_id and sas.session_start_date=aai.session_start_date and sas.session_end_date=aai.session_end_date
+left join system_values as sv2 on sv.university_id = sv2.university_id and sv2.code = 'PH2OPN'
+left join system_values as sv3 on sv.university_id = sv3.university_id and sv3.code = 'EDTALD'
+left join admission_addresses_master as aam on aam.user_id=es.student_id and aam.address_key='COR'
+left join admission_addresses_master as aam2 on aam2.user_id=es.student_id and aam2.address_key='PER'
+left join system_table_two as cstt on cstt.component_code=es.category_code and cstt.group_code='STDCTG' and cstt.university_code=sv.university_id
+left join system_table_two as gstt on gstt.component_code=es.gender and gstt.group_code='GENDER' and gstt.university_code=sv.university_id
+left join ret_eligibility as re on re.student_id = es.student_id
+left join application_fee_password as afp on afp.application_number = es.application_number
+where es.application_number=#applicationNumber# and aai.status='ACT' 
+and es.registered_in_session=concat_ws('-',substring(sv.value,1,4), substring(sv.value, 11,2))
+and sv.university_id=#universityID# and sas.tab_status!='';
+ </select>
+  
+  
+  <select id="getApplicantDetails" resultClass="in.ac.dei.edrp.admissionsystem.common.beans.Applicant">
+  select first_name as applicantName, father_first_name as fatherName, mother_first_name as motherName,
+guardian_name as guardianName, date_of_birth as dob,  gender, category_code as category, es.nationality,
+es.religion, es.primary_email_id as primaryEmailID, es.secondary_email_id as secondaryEmailID,
+es.minority, es.marital_status as maritalStatus, es.physical_handicap as pwd,
+aam.address_line1 as addressL1, aam.address_line2 as addressL2, aam.state, aam.city, aam.pincode,
+aam.home_phone as homePhone, aam.other_phone as otherPhone, aam.country, es.student_id as userID,
+es.application_number as applicationNumber,
+es.applicant_name_hi applicantNameHi, es.father_name_hi fatherNameHi, es.mother_name_hi motherNameHi
+from entity_student as es
+join admission_addresses_master as aam on aam.user_id=es.student_id
+join system_values as sv on sv.university_id=es.university_id and sv.code='ADMSSN'
+where es.application_number=#applicationNumber# and es.registered_in_session=concat_ws('-',substring(sv.value,1,4), substring(sv.value, 11,2)) 
+and aam.address_key='COR';
+  
+  </select>
+ 
+ <select id="getTabStatus" resultClass="java.lang.String">
+ select tab_status as applicationStatus from student_application_status as sas
+join system_values as sv on sv.university_id=sas.university_id
+and sas.session_start_date= concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+where sas.application_number=#applicationNumber# and sv.code='ADMSSN';
+ </select>
+
+<!--  select *
+from (select pm.program_id as programID, pm.program_name as programName, pf.form_number as formNumber, pf.form_name as formName, pf.offered_by as entityID
+ from program_master as pm
+join program_form as pf on pf.program_id=pm.program_id and pf.university_id=#universityID#
+where <dynamic prepend="pm.program_id IN">
+			<iterate property="programs" open="(" close=")" conjunction=",">
+				#programs[]#
+			</iterate>
+		</dynamic>
+) pm
+left join
+(
+select sr.program_id,sr.registration_number as registrationNumber, sas.application_number as applicationNumber,
+sas.session_start_date as sessionStartDate, sas.session_end_date as sessionEndDate,
+sr.student_id as userID,sas.university_id as universityID, stn.test_number as testNumber,
+exam_center1 as examCenter1, exam_center2 as examCenter2, exam_center3 as examCenter3, staff_ward as staffWardFlag, staff_ward_code as staffCode, exmStt.component_description as examCenter1Name, sppr.main_group as paperMainGroup, if(pprstt.component_description is null,'-',pprstt.component_description) as paperMainGroupDesc,
+apr.education_mode as selectedEducationMode, ofmd.component_description as selectedEducationModeName, 
+apr.study_center as studyCenterCode, scent.entity_name as studyCenterName
+from student_application_status as sas
+left join applicant_program_registration as apr on sas.application_number=apr.application_number and apr.session_start_date=sas.session_start_date
+and apr.session_end_date=sas.session_end_date
+left join student_registration as sr on sr.registration_number=apr.registration_number
+and sr.program_id=apr.program_id and sr.start_date=apr.session_start_date and sr.end_date=apr.session_end_date
+left join student_test_number as stn on stn.registration_number=sr.registration_number and stn.program_id=sr.program_id
+and stn.start_date=apr.session_start_date and stn.end_date=apr.session_end_date
+left join system_values as sv on sv.university_id=sas.university_id
+and sas.session_start_date= concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+and sv.code='ADMSSN' and sv.university_id=#universityID#
+left join system_table_two as exmStt on exmStt.component_code=exam_center1 and exmStt.group_code='CENCOD' and exmStt.university_code=sv.university_id
+left join system_table_two as ofmd on ofmd.component_code = apr.education_mode and ofmd.group_code='OFRMOD' and ofmd.university_code='0001'
+left join (select apr.registration_number, apr.program_id, sp.main_group  from applicant_program_registration as apr
+left join student_paper as sp on sp.registration_number=apr.registration_number and sp.program_id=apr.program_id
+and sp.start_date=apr.session_start_date and sp.end_date=apr.session_end_date
+where apr.application_number=#applicationNumber# group by apr.registration_number) sppr
+on sppr.registration_number=sr.registration_number and sppr.program_id=sr.program_id
+left join system_table_two as pprstt on pprstt.component_code=sppr.main_group and pprstt.group_code='SUBCOD' and pprstt.university_code=sv.university_id
+left join entity_master as scent on scent.entity_id = apr.study_center
+where sas.application_number=#applicationNumber#) set2
+on pm.programID=set2.program_id
+order by pm.programID asc; --> <!-- DONT CHANGE THE ORDER CLAUSE -->
+<!-- commented above query and added modified query wrt online mode, by Jyoti on 27 apr 2021 -->
+ 
+ <select id="getApplicantPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.beans.ProgramWiseDetail">
+select *
+from (select pm.program_id as programID, pm.program_name as programName, pf.form_number as formNumber, pf.form_name as formName, pf.offered_by as entityID
+ from program_master as pm
+join program_form as pf on pf.program_id=pm.program_id and pf.university_id=#universityID#
+and pf.form_number = (select form_number from program_form
+                  where program_id = pm.program_id group by program_id)
+where <dynamic prepend="pm.program_id IN">
+			<iterate property="programs" open="(" close=")" conjunction=",">
+				#programs[]#
+			</iterate>
+		</dynamic>
+) pm
+left join
+(
+select sr.program_id,sr.registration_number as registrationNumber, sas.application_number as applicationNumber,
+sas.session_start_date as sessionStartDate, sas.session_end_date as sessionEndDate,
+sr.student_id as userID,sas.university_id as universityID, stn.test_number as testNumber,
+exam_center1 as examCenter1, exam_center2 as examCenter2, exam_center3 as examCenter3, staff_ward as staffWardFlag, staff_ward_code as staffCode, exmStt.component_description as examCenter1Name, sppr.main_group as paperMainGroup, if(pprstt.component_description is null,'-',pprstt.component_description) as paperMainGroupDesc,
+apr.education_mode as selectedEducationMode, apr.online_mode as selectedOnlineMode, apr.regular_mode as selectedRegularMode,
+apr.distance_mode as selectedDistanceMode,
+if (apr.regular_mode = 'Y' and apr.online_mode ='Y' and apr.distance_mode = 'N', "REGULAR, ONLINE",
+    if(apr.regular_mode = 'Y' and apr.online_mode = 'N' and apr.distance_mode = 'N', "REGULAR",
+    if(apr.regular_mode = 'N' and apr.online_mode = 'Y' and apr.distance_mode = 'N' , "ONLINE",
+    if(apr.regular_mode = 'N' and apr.online_mode = 'N' and apr.distance_mode = 'Y' , "DISTANCE",
+    if(apr.regular_mode = 'N' and apr.online_mode = 'Y' and apr.distance_mode = 'Y' , "ONLINE, DISTANCE",
+        if(apr.regular_mode = 'Y' and apr.online_mode = 'N' and apr.distance_mode = 'Y' , "REGULAR, DISTANCE",
+    if(apr.regular_mode = 'Y' and apr.online_mode = 'Y' and apr.distance_mode = 'Y' , "REGULAR, ONLINE, DISTANCE", 
+    "REGULAR"))))))) as selectedEducationModeName, 
+apr.study_center as studyCenterCode, scent.entity_name as studyCenterName
+
+<!-- by Arjun on 24-07-2021 for passkey -->
+, ap.passkey passkey, ap.exam_date examDate
+
+from student_application_status as sas
+left join applicant_program_registration as apr on sas.application_number=apr.application_number and apr.session_start_date=sas.session_start_date
+and apr.session_end_date=sas.session_end_date
+left join student_registration as sr on sr.registration_number=apr.registration_number
+and sr.program_id=apr.program_id and sr.start_date=apr.session_start_date and sr.end_date=apr.session_end_date
+left join student_test_number as stn on stn.registration_number=sr.registration_number and stn.program_id=sr.program_id
+and stn.start_date=apr.session_start_date and stn.end_date=apr.session_end_date
+left join system_values as sv on sv.university_id=sas.university_id
+and sas.session_start_date= concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+and sv.code='ADMSSN' and sv.university_id=#universityID#
+left join system_table_two as exmStt on exmStt.component_code=exam_center1 and exmStt.group_code='CENCOD' and exmStt.university_code=sv.university_id
+left join system_table_two as ofmd on ofmd.component_code = apr.education_mode and ofmd.group_code='OFRMOD' and ofmd.university_code='0001'
+left join (select apr.registration_number, apr.program_id, sp.main_group  from applicant_program_registration as apr
+left join student_paper as sp on sp.registration_number=apr.registration_number and sp.program_id=apr.program_id
+and sp.start_date=apr.session_start_date and sp.end_date=apr.session_end_date
+where apr.application_number=#applicationNumber# group by apr.registration_number) sppr
+on sppr.registration_number=sr.registration_number and sppr.program_id=sr.program_id
+left join system_table_two as pprstt on pprstt.component_code=sppr.main_group and pprstt.group_code='SUBCOD' and pprstt.university_code=sv.university_id
+left join entity_master as scent on scent.entity_id = apr.study_center
+
+<!-- left join by Arjun on 24-07-2021 for passkey -->
+left join applicant_passkey as ap on ap.application_number = apr.application_number
+and ap.program_id = apr.program_id
+
+
+where sas.application_number=#applicationNumber#) set2
+on pm.programID=set2.program_id
+order by pm.programID asc;
+ </select>
+ 
+ <select id="getCategoryList" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+ 	select component_code as code, component_description as description from system_table_two 
+ 	where group_code='STDCTG' and university_code=#universityID#;
+ </select>
+ 
+ <select id="getSQuestionsList" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+ select component_code as code, component_description as description from system_table_two 
+ where group_code='SECQST'
+and university_code=#param#;
+ </select>
+ 
+<insert id="createAccount">
+ 	insert into applicant_account_info (first_name, email_id,password, date_of_birth, gender, phone_number, state, creator_id, insert_time, category, city, status, user_name, student_id, security_question_id, security_answer, session_start_date, session_end_date)
+	select ucase(#applicantName#),#primaryEmailID#, sha1(#password#), #dob#, #gender#, #homePhone#, #corState#, #userID#, now(), #category#, #corCity#, 'ACT', #applicationNumber#, #userID#, #question#, #answer#,
+	concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2)),
+	concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+	from
+	system_values as sv
+	where sv.code='ADMSSN' and university_id=#universityID#;
+</insert>
+ 
+ <update id="updateAppNumber">
+ 	update system_values set value=value+1 where code='APNUMB' and university_id='0001'
+	and value=#code#;
+ </update>
+ 
+ <insert id="insertSTUDID">
+ 	insert into system_values (university_id, code, value, insert_time, creator_id)
+	values (#universityID#,'STUDID','1',now(),'Administrator');
+ </insert>
+ 
+ <select id="getStdIDandValue" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select sv2.value as code, concat('S', entity_id,substring(sv1.value, 1, 4)) as description,
+concat_ws('-',substring(sv1.value,1,4), substring(sv1.value, 11,2)) as otherProperty1 from entity_master as em
+join system_values as sv1 on sv1.code='ADMSSN' and sv1.university_id=em.parent_entity_id
+join system_values as sv2 on sv2.code='STUDID' and sv2.university_id=em.parent_entity_id
+join university_master as um on um.university_code=sv2.university_id
+where em.parent_entity_id=#universityID# and em.level='1' and um.current_status='1' and em.entity_id='00010013';
+</select>
+
+<update id="updateStdID">
+update system_values set value=value+1 where code='STUDID' and university_id='0001'
+and value=#code#;
+</update>
+ 
+ <insert id="insertPersonalDetails">
+ 	insert into entity_student (university_id, student_id, first_name,primary_email_id,
+		 date_of_birth,category_code, gender, registered_in_session, insert_time,creator_id,
+		application_number, aadhar_number, ews, kashmiri_pandit, id_proof, id_proof_no, secondary_email_id)
+	values 
+		(#universityID#,#userID#,ucase(#applicantName#),#primaryEmailID#,#dob#,#category#,#gender#,
+		#registeredSession#,now(), #userID#, #applicationNumber#, #aadharNumber#, #ews#, #kashmiriPandit#, #typeOfId#, #idProofNumber#, #secondaryEmailID#);
+ </insert>
+ 
+ <insert id="insertAddressDetailsCOR">
+ 	insert into admission_addresses_master ( user_type, user_id, address_key, address_line1, address_line2,
+			city, state, pincode, home_phone, other_phone, insert_time, creator_id, country, district)
+	values ('STD',#userID#,'COR',ucase(#corAddressL1#),ucase(#corAddressL2#),#corCity#,#corState#,#corPincode#,#homePhone#,#otherPhone#, now(),
+			#userID#,#corCountry#,#corCity#);
+ </insert>
+ 
+ <insert id="insertAddressDetailsPER">
+ 	insert into admission_addresses_master ( user_type, user_id, address_key, address_line1, address_line2,
+			city, state, pincode, home_phone, other_phone, insert_time, creator_id, country, district)
+	values ('STD',#userID#,'PER',#perAddressL1#,#perAddressL2#,#perCity#,#perState#,#perPincode#,#homePhone#,#otherPhone#, now(),
+			#userID#,#perCountry#,#perCity#);
+ </insert>
+ 
+ <insert id="insertSAS">
+ insert into student_application_status ( application_number, email_id,
+session_start_date,session_end_date,university_id, tab_status)
+ select  #applicationNumber#, #primaryEmailID#, concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2)) as startDate,
+concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2)) as endDate,
+sv.university_id, #tabStatus#
+from system_values as sv where sv.code='ADMSSN' and sv.university_id=#universityID#;
+ 
+ </insert>
+ 
+<select id="getAllCategories" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select component_code as code, component_description as description
+from system_table_two  where group_code='STDCTG' and university_code=#universityID#;
+</select>
+ 
+<select id="getAllGenders" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select component_code as code, component_description as description
+from system_table_two  where group_code='GENDER' and university_code=#universityID#;
+</select>
+
+<select id="getAllBloodGroups" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select component_code as code, component_description as description
+from system_table_two  where group_code='BLDGRP' and university_code=#universityID#;
+</select>
+
+<select id="getProgramAndMGroup" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_id as code, if(sp.main_group is null,'',sp.main_group) as description from applicant_program_registration as apr
+left join program_master as pm on pm.program_id=apr.program_id
+left join system_values as sv
+on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))=apr.session_start_date
+and concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))=apr.session_end_date
+and sv.code='ADMSSN'
+left join student_paper as sp on apr.registration_number=sp.registration_number
+and sp.start_date=apr.session_start_date and sp.end_date=apr.session_end_date and
+sp.program_id=apr.program_id
+where apr.application_number=#applicationNumber# and sv.university_id=#universityID#
+group by pm.program_id, sp.main_group
+order by pm.program_id asc; <!-- DO NOT CHANGE THE ORDER CLAUSE -->
+</select>
+ 
+ <select id="checkApplication" resultClass="in.ac.dei.edrp.admissionsystem.common.User">
+select es.application_number as applicationNumber, es.primary_email_id as emailID
+from entity_student as es
+join admission_addresses_master as aam on aam.user_id = es.student_id
+where es.application_number=#applicationNumber# and aam.home_phone=#contactNumber#
+and es.date_of_birth=#dob# and aam.address_key='COR';
+</select>
+
+<select id="getEmailCount" resultClass="java.lang.String">
+select email_id from applicant_account_info where email_id=#primaryEmailID#;
+</select>
+
+<select  id="getProgramAdmitCardDetails" resultClass="in.ac.dei.edrp.admissionsystem.common.beans.ProgramWiseDetail">
+	select pm.program_id as programID, pm.program_name as programName, apr.admit_card_available as admitCardGenerated, concat_ws('/',sr.document_path, apr.application_number) as admitCardPath from applicant_program_registration as apr
+	join student_registration as sr on sr.registration_number = apr.registration_number
+	and sr.program_id = apr.program_id and apr.session_start_date = sr.start_date
+	and apr.session_end_date = sr.end_date
+	join system_values as sv
+	on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))=apr.session_start_date
+	and concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))=apr.session_end_date
+	and sv.code='ADMSSN'
+	join program_master as pm on pm.program_id = apr.program_id
+	join entity_student as es on es.application_number = apr.application_number and sr.student_id = es.student_id
+	where apr.application_number=#applicationNumber# and es.date_of_birth=#dob#;
+
+</select>
+
+<select id="getAccountsWithSameDetails" resultClass="in.ac.dei.edrp.admissionsystem.common.User">
+select application_number applicationNumber, first_name applicantName, primary_email_id emailID,date_of_birth dob
+from entity_student where first_name=#applicantName#
+and primary_email_id=#primaryEmailID#
+and date_of_birth=#dob# and datediff(now(),insert_time) <![CDATA[ <= ]]> 1
+order by application_number desc limit 0,1;
+</select>
+
+<select id="checkFeePassword" resultClass="java.lang.String">
+select fee_password feePassword from application_fee_password
+where application_number = #applicationNumber#;
+</select>
+
+<insert id="insertFeePassword">
+insert into application_fee_password (application_number, fee_password, pre_generated)
+values (#applicationNumber#, round(rand()*10000), 'N');
+</insert>
+
+<select id="checkAdmissionDates" resultClass="java.lang.String">
+select (now() between concat_ws('-',substring(value,17,4),substring(value,21,2), substring(value,23,2)) and
+concat_ws('-',substring(value,25,4),substring(value,29,2), substring(value,31,2)))
+from system_values where code='ADMSSN';
+</select>
+
+<select id="feePassword" resultClass="java.lang.String">
+select fee_password from application_fee_password where application_number = #applicationNumber#;
+</select>
+
+<select id="getApplicationsCount" resultClass="in.ac.dei.edrp.admissionsystem.common.ProgramCounter">
+select pm.program_name programName, if(totalApplications is null, '0', totalApplications) totalApplicationsCount,
+if(feeNotVerified is null, '0', feeNotVerified) feeNotVerifiedAppsCount,
+if(feeVerified is null, '0',feeVerified) feeVerifiedAppsCount
+from program_form pf join
+(
+select form_number, form_name,
+if(form_number='0016','0',
+if(form_number='0015','1',
+if(form_number='0003','2',
+if(form_number='0001','3',
+if(form_number='0002','4',
+if(form_number='0013','5','6')))))) formOrder from program_form group by form_number) s1
+on s1.form_number = pf.form_number and pf.available = 'Y'
+join program_master as pm on pm.program_id = pf.program_id
+left join
+(
+select pf.program_id,  count(*) totalApplications from program_form pf
+join applicant_program_registration apr on apr.program_id = pf.program_id
+join student_application_status sas
+on sas.application_number =apr.application_number
+where pf.available = 'Y' and sas.application_status = 'D'
+group by pf.program_id) ta on ta.program_id = pf.program_id
+left join
+(
+select pf.program_id, count(*) feeNotVerified from program_form pf
+join applicant_program_registration apr on apr.program_id = pf.program_id
+join student_application_status sas
+on sas.application_number =apr.application_number
+where pf.available = 'Y' and sas.application_status = 'D' and sas.verification_status is null
+group by pf.program_id
+) fnv on fnv.program_id = pf.program_id
+left join
+(
+select pf.program_id, count(*) feeVerified from program_form pf
+join applicant_program_registration apr on apr.program_id = pf.program_id
+join student_application_status sas
+on sas.application_number =apr.application_number
+where pf.available = 'Y' and sas.application_status = 'D' and sas.verification_status = 'REC'
+group by pf.program_id ) fv on fv.program_id = pf.program_id
+order by s1.formOrder, pm.program_name asc;
+</select>
+</sqlMap>

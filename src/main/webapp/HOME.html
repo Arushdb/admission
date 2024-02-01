@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>HOME.html</title>
+	
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="this is my page">
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    
+    <!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+<script>
+function loadXMLDoc(filename)
+{
+if(window.XMLHttpRequest)
+{
+xhttp = new XMLHttpRequest();
+}
+else
+{
+xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+}
+xhttp.open("GET",filename,false);
+xhttp.send();
+return xhttp.responseXML;
+
+}
+</script>
+
+  </head>
+  
+  <body onload="getSelections();" style="font-family:verdana;" >
+    
+<script>
+function getSelections()
+{
+var xmlDoc = loadXMLDoc("countries.xml");
+var x=xmlDoc.getElementsByTagName("country");
+var con = document.getElementById("countries");
+
+
+for (i=0;i<x.length;i++)
+  {
+  var country = new Option(x[i].childNodes[0].nodeValue, x[i].childNodes[0].nodeValue, false, false);
+  var y = document.createElement("OPTION");
+    y.setAttribute("value", x[i].getAttribute("code"));
+    var t = document.createTextNode(x[i].childNodes[0].nodeValue);
+    y.appendChild(t);
+    document.getElementById("countries").appendChild(y);
+
+  } 
+
+}
+
+function printValue()
+{
+alert(document.getElementById("countries").value);
+var xmlDoc = loadXMLDoc("stateCity.xml");
+var x=xmlDoc.getElementsByTagName("state");
+var con = document.getElementById("states");
+
+alert(x.length);
+//alert(x[0].item[0].attributes[0].value);
+for (i=0;i<x.length;i++)
+  {
+  //var country = new Option(x[i].childNodes[0].nodeValue, x[i].childNodes[0].nodeValue, false, false);
+ var y = document.createElement("OPTION");
+  y.setAttribute("value", x.item(i).attributes[0].value);
+ var t = document.createTextNode(x.item(i).attributes[0].value);
+ y.appendChild(t);
+ document.getElementById("states").appendChild(y);
+ 	//document.write(x.item(i).attributes[0].name);
+	//document.write(" = ");
+	//document.write(x.item(i).attributes[0].value);
+	
+
+ 	
+  } 
+
+}
+
+function printValue2()
+{
+alert(document.getElementById("states").value)
+}
+</script>
+
+<select id="countries" onchange="printValue();"></select>
+<select id="states" onchange="printValue2()"></select>
+
+  </body>
+</html>

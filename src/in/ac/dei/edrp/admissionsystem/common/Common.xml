@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!DOCTYPE sqlMap
+PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+
+<sqlMap namespace="common">
+
+
+<select id="getApplicantPersonalDetails" resultClass="in.ac.dei.edrp.admissionsystem.common.Applicant">
+select coalesce(ucase(concat_ws(' ',first_name, middle_name, last_name)),'') as name,
+coalesce(ucase(concat_ws(' ',father_first_name, father_middle_name, father_last_name)),'') as fatherName,
+coalesce(ucase(concat_ws(' ', mother_first_name, mother_middle_name, mother_last_name)),'') as motherName,
+coalesce(primary_email_id,'') as emailID,
+ if(es.secondary_email_id='' or es.secondary_email_id is null, 'NA', es.secondary_email_id) as secondaryEmailID,
+coalesce(concat_ws(', ', concat_ws(' ', day(date_of_birth), monthname(date_of_birth)),year(date_of_birth)),'') as dob,
+coalesce(ucase(stt1.component_description),'') as category,coalesce(ucase(es.nationality),'') as nationality,
+coalesce(ucase(stt2.component_description),'') as gender, coalesce(ucase(religion),'') as religion,
+coalesce(es.guardian_name,'') as guardian, ucase(if(es.minority='' or es.minority is null, 'NA',es.minority)) as minority,
+ucase(if(marital_status='' or marital_status is null, 'NA',marital_status)) as maritalStatus,
+coalesce(ucase(address_line1),'') as addressLine1, coalesce(ucase(address_line2),'') as addressLine2,
+coalesce(ucase(city),'') as city, coalesce(ucase(state),'') as state, coalesce(pincode,''),
+ if(home_phone='' or home_phone is null, 'NA', home_phone) as phoneNo,
+ coalesce(application_document_path,'') as applicationDocumentPath,
+ coalesce(sas.expected_fee,'') as totalFee, coalesce(ucase(um.university_name),'') as university,
+ coalesce(concat_ws('-',substring(sas.session_start_date, 1, 4), substring(sas.session_end_date, 1, 4)),'') as session,
+ coalesce(um.nick_name,'') as universityNickName,
+if(sr.father_income='' or sr.father_income is null, 'NA', sr.father_income) as fatherIncome, if(sr.mother_income='' or sr.mother_income is null, 'NA', sr.mother_income) as motherIncome,
+if(sr.guardian_income='' or sr.guardian_income is null ,'NA', sr.guardian_income) as guardianIncome, if(sr.locality='' or sr.locality is null, 'NA', sr.locality) as locality,
+if(sr.hostel_required='' or sr.hostel_required is null, 'NA', sr.hostel_required) as hostelRequired, if(sr.ever_expelled='' or sr.ever_expelled is null, 'NA', sr.ever_expelled) as everExpelled,
+if(es.physical_handicap='' or es.physical_handicap is null, 'NA', if(es.physical_handicap='N', 'NO', if(es.physical_handicap='Y', 'YES', 'NO'))) as physicallyHandicapped,
+if(sr.staff_ward_code is null or trim(sr.staff_ward_code)='', '', sr.staff_ward_code) as staffCode, if(sr.cocurricular_activities='' or sr.cocurricular_activities is null, '', sr.cocurricular_activities) as cocurricularActivites, sr.application_type as applicationType
+from entity_student as es
+left join admission_addresses_master as aam on aam.user_id=es.student_id
+left join student_application_status as sas on sas.application_number=es.application_number and es.university_id=sas.university_id
+left join applicant_program_registration as apr on apr.application_number = sas.application_number
+left join system_table_two as stt1 on stt1.component_code=es.category_code
+left join system_table_two as stt2 on stt2.component_code=es.gender
+left join university_master as um on um.university_code=sas.university_id and um.current_status=1
+left join student_registration as sr on sr.student_id=es.student_id and sr.registration_number=apr.registration_number
+where es.university_id=substring(es.student_id, 2, 4) and es.university_id=stt1.university_code and stt1.university_code=stt2.university_code
+and stt1.group_code='STDCTG' and stt2.group_code='GENDER' and sas.application_number=#applicationNumber# group by sr.student_id
+and aam.address_key='COR';
+</select>
+
+<select id="getApplicantPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.ApplicantProgram">
+select set1.*, sttb1.component_description  as branch1 , sttb2.component_description  as branch2, sttb3.component_description  as branch3,
+sttb4.component_description  as branch4, sttb5.component_description  as branch5 from (select apr.application_number as applicationNumber , apr.registration_number as registrationNumber, pm.program_name as programName, stt1.component_description as subjectName,
+if(exam_center_code='' or exam_center_code is null,'NA', stt2.component_description) as examinationCenter, if(sr.staff_ward='N','NO','YES') as staff_ward ,
+count(*) as noOfBranches,
+if(pm.preffered_choice_allowed='' or pm.preffered_choice_allowed is null, 'N', pm.preffered_choice_allowed) as prefferedChoiceAllowed,
+sr.preferred_branch_1, sr.preferred_branch_2, sr.preferred_branch_3, sr.preferred_branch_4,
+sr.preferred_branch_5, sas.university_id
+from student_application_status as sas join applicant_program_registration as apr on
+apr.application_number=sas.application_number and sas.email_id=apr.user_name and sas.session_start_date=apr.session_start_date
+and sas.session_end_date=apr.session_end_date
+left join student_registration as sr on sr.registration_number=apr.registration_number and apr.program_id=sr.program_id
+and sr.start_date=apr.session_start_date and sr.end_date=apr.session_end_date
+left join system_table_two as stt1 on stt1.component_code=substring(sr.cos_value, 4,1)
+left join program_master as pm on pm.program_id=apr.program_id
+join system_values as sv on sv.university_id=sas.university_id and STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d')=sas.session_start_date and
+STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d')=sas.session_end_date and sv.code='ADMSSN'
+left join system_table_two as stt2 on stt2.component_code=sr.exam_center_code and stt2.university_code=sas.university_id and stt2.group_code='CENCOD'
+left join program_form as pf on pf.program_id=sr.program_id and pf.university_id=sas.university_id
+left join program_offered_by as pob on pob.offered_by=pf.offered_by and pob.program_id=pf.program_id
+where stt1.group_code='SUBCOD' and sas.university_id=substring(pm.program_id, 1, 4)
+and sas.application_number=#applicationNumber# and sas.university_id=stt1.university_code group by pob.program_id) set1
+left join system_table_two as sttb1 on sttb1.component_code=set1.preferred_branch_1 and sttb1.group_code='BRNCOD' and sttb1.university_code=set1.university_id
+left join system_table_two as sttb2 on sttb2.component_code=set1.preferred_branch_2 and sttb2.group_code='BRNCOD' and sttb2.university_code=set1.university_id
+left join system_table_two as sttb3 on sttb3.component_code=set1.preferred_branch_3 and sttb3.group_code='BRNCOD' and sttb3.university_code=set1.university_id
+left join system_table_two as sttb4 on sttb4.component_code=set1.preferred_branch_4 and sttb4.group_code='BRNCOD' and sttb4.university_code=set1.university_id
+left join system_table_two as sttb5 on sttb5.component_code=set1.preferred_branch_5 and sttb5.group_code='BRNCOD' and sttb5.university_code=set1.university_id;
+
+</select>
+
+<select id="getEntranceTests" resultClass="in.ac.dei.edrp.admissionsystem.common.EntranceTest">
+select if(sp.grouping_id is null or sp.grouping_id='', 'NA',sp.grouping_id) 'group', if(stt.component_description is null or stt.component_description='', 'NA', stt.component_description) paperName from applicant_program_registration as apr left join student_paper as sp
+on sp.registration_number=apr.registration_number and sp.program_id=apr.program_id and apr.application_number=#applicationNumber#
+and sp.start_date=apr.session_start_date and sp.end_date=apr.session_end_date
+left join system_values as sv on sv.university_id=substring(apr.program_id, 1, 4) and STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d')=apr.session_start_date and
+STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d')=apr.session_end_date and sv.code='ADMSSN'
+left join program_master as pm on pm.program_id=apr.program_id
+left join system_table_two as stt on stt.component_code=sp.paper_code and stt.university_code=sv.university_id and stt.group_code='PAPCOD'
+where  apr.registration_number=#registrationNumber#;
+</select>
+
+<select id="getApplicantPComponents" resultClass="in.ac.dei.edrp.admissionsystem.common.ProgramComponent" >
+select set1.componentName, set1.obtainedMarks, set1.totalMarks, set1.board, set1.existingStudent, set1.passingYear, set1.resultAwaited, set1.score, set1.evaluationType
+from
+(
+SELECT if(pc.customized_name is null or pc.customized_name='', cd.description, pc.customized_name) componentName, marks_obtained as obtainedMarks, scl.score as score, pc.type as evaluationType, 
+if(pc.type='S','', total_marks) as totalMarks, if(pc.type='S', '', if(scl.board_id is null or scl.board_id='','None', component_description)) as board,
+if(pc.type='S','', if(scl.dei_student='N', 'NO', 'YES') ) as existingStudent, scl.component_id, if(scl.passing_year='','NA',scl.passing_year) as passingYear,
+if(scl.result_awaited='' or scl.result_awaited is null or scl.result_awaited='N', 'NO', 'YES') as resultAwaited FROM student_call_list as scl
+join applicant_program_registration as apr on apr.registration_number=scl.registration_number and apr.program_id=scl.program_id
+and apr.session_start_date=scl.start_date and apr.session_end_date=scl.end_date
+join component_description as cd on cd.component_id=scl.component_id
+join program_components as pc on pc.component_id=cd.component_id and pc.program_id=scl.program_id
+join system_table_two as stt on stt.component_code=scl.board_id or scl.board_id is null or scl.board_id=''
+where apr.application_number=#applicationNumber#
+and cd.university_id=substring(apr.program_id, 1, 4) and stt.group_code='BOARDS' and stt.university_code=cd.university_id
+) set1
+where set1.obtainedMarks!=0 and (set1.totalMarks!=0 or set1.totalMarks='')
+group by set1.component_id;
+
+</select>
+
+
+<insert id="insertFTPDocumentDetails">
+		insert into ftp_documents 
+	(application_number, doc_id, file_name, status, ftp_source_path, ftp_target_path, remote_server_ip,
+	user_name, password, insert_time, ftp_start_time, ftp_end_time, session_start, session_end)
+	select #form_number#, #docId#, #file_name#, 'U', #sourcePath#, #targetPath#,
+	stt.component_description, stt2.component_description, stt3.component_description,
+	now(), null, null, STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d') as session_start,
+	STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d') as session_end
+	from system_table_two stt
+	join system_table_two stt2 on stt.group_code=stt2.group_code and stt2.component_code='RUN'
+	join system_table_two stt3 on stt.group_code=stt3.group_code and stt3.component_code='RPS'
+	join system_values sv on stt.university_code=sv.university_id and sv.code='ADMSSN'
+	where stt.component_code='RIP' and stt.group_code='ADMFTP';
+	</insert>
+	
+	<insert id="applicationGenerationErrorLogs" >
+	insert into application_generation_error_logs (application_number,error,insert_time)
+	values (#form_number#, #file_name#,now());
+	</insert>
+	
+
+</sqlMap>

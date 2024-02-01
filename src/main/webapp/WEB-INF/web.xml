@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" 
+	xmlns="http://java.sun.com/xml/ns/javaee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+  <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>*.htm</url-pattern>
+    </servlet-mapping>
+    <listener>
+        <listener-class>
+            org.springframework.web.context.ContextLoaderListener
+        </listener-class>
+    </listener>
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/applicationContext.xml</param-value>
+    </context-param>	
+    
+    <context-param>
+         <param-name>log4jConfigLocation</param-name>  
+         <param-value>/WEB-INF/log4j.xml</param-value>
+    </context-param>    
+    <listener> 
+          <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+    </listener>
+    
+    
+	
+  <servlet>
+    <servlet-name>SimpleCaptcha</servlet-name>
+    <servlet-class>in.ac.dei.edrp.admissionsystem.captcha.ExtendedCaptchaServlet</servlet-class>
+    <init-param>
+        <param-name>width</param-name>
+        <param-value>200</param-value>
+    </init-param>
+    <init-param>
+        <param-name>height</param-name>
+        <param-value>50</param-value>
+    </init-param>
+  </servlet>
+  <servlet>
+    <description>This is the description of my J2EE component</description>
+    <display-name>This is the display name of my J2EE component</display-name>
+    <servlet-name>CaptchaServlet</servlet-name>
+    <servlet-class>in.ac.dei.edrp.admissionsystem.captcha.CaptchaServlet</servlet-class>
+  </servlet>
+
+
+  <servlet-mapping>
+    <servlet-name>SimpleCaptcha</servlet-name>
+    <url-pattern>/SimpleCaptcha.jpg</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>CaptchaServlet</servlet-name>
+    <url-pattern>/CaptchaServlet</url-pattern>
+  </servlet-mapping>
+  
+  
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+  
+  <context-param>
+  <param-name>universityID</param-name>
+  <param-value>0001</param-value>
+  </context-param>
+  
+  <context-param>
+  <param-name>PRGLMT</param-name>
+  <param-value>5</param-value>
+  </context-param>
+  
+  <context-param>
+  <param-name>emailDependancy</param-name>
+  <param-value>N</param-value>
+  </context-param>
+  
+  <session-config>
+  <session-timeout>15</session-timeout>
+  </session-config>
+  
+  <context-param> 
+    <description>Location to store uploaded file</description> 
+    <param-name>file-upload</param-name> 
+    <param-value>D:\uploadedDocs\</param-value>      
+</context-param>
+
+
+ <context-param>
+ <param-name>DOC_FOLDER</param-name>
+ <param-value>ADMISSION_PRODUCTION</param-value>
+ </context-param>
+
+ <context-param>
+  <param-name>document_size</param-name>
+   <param-value>250</param-value>
+    </context-param>
+</web-app>

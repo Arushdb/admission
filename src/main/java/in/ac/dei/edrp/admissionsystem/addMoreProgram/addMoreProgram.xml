@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="addMoreProgram">
+
+<select  id="getAppliedPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+	select pm.program_id as code, pm.program_name as description,apr.checklist_sent_flag universityID from applicant_program_registration as apr
+	join student_registration as sr on sr.registration_number = apr.registration_number
+	and sr.program_id = apr.program_id and apr.session_start_date = sr.start_date
+	and apr.session_end_date = sr.end_date
+	join system_values as sv
+	on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))=apr.session_start_date
+	and concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))=apr.session_end_date
+	and sv.code='ADMSSN'
+	join program_master as pm on pm.program_id = apr.program_id
+	join entity_student as es on es.application_number = apr.application_number and sr.student_id = es.student_id
+	join applicant_account_info aai on aai.user_name=es.application_number
+	where apr.application_number=#applicationNumber# and es.date_of_birth=#dob# and password=sha1(#password#);
+</select>
+
+<select id="getTransferPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+<!-- This query needs to be changed
+select pm.program_id code, pm.program_name description from program_form as pf
+join program_master as pm on pm.program_id = pf.program_id
+where pf.form_number='0013'
+order by pm.program_name asc; -->
+
+
+select ep.to_program code, program_name description,preffered_choice_allowed as otherProperty1 from extra_program_addition_criteria ep join program_master pm on pm.program_id=ep.to_program
+join applicant_program_registration apr on ep.from_program=apr.program_id
+where ep.flag='Y' and application_number=#applicationNumber#
+and to_program not in (select program_id from applicant_program_registration where application_number=#applicationNumber#)
+group by to_program
+order by program_name;
+</select>
+
+<select id="checkApplication" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_name code, pm2.program_name description, es.first_name otherProperty1 from transfer_applications as ta
+join program_master as pm on pm.program_id = ta.from_program
+join program_master as pm2 on pm2.program_id = ta.to_program
+join entity_student as es on es.application_number = ta.application_number
+where ta.application_number = #otherProperty1# and ta.from_program=#code#;
+</select>
+
+<insert id="insertTransferApplication">
+insert into transfer_applications
+values (#otherProperty1#,#code#,#description#, now());
+</insert>
+<insert id="addInAPR">
+insert into applicant_program_registration
+(user_name, registration_number, program_id, application_number, session_start_date, session_end_date, creator_id, insert_time, modifier_id, modification_time, admit_card_available, checklist_sent_flag, is_duplicate, education_mode, study_center)
+select #otherProperty1#,#code#,#description#,#otherProperty1#,session_start_date,session_end_date,creator_id,now(),null,null,'X',#universityID#,'0','REG','00010013'
+from applicant_program_registration where application_number=#otherProperty1# limit 1;
+</insert>
+
+<select id="getStudentId" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select student_id as code from entity_student where application_number=#otherProperty1#;
+</select>
+<select id="getEntityId" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select offered_by as code from program_form where program_id=#description#;
+</select>
+
+<insert id="addInSR">
+insert into student_registration
+(student_id, registration_number, form_number, cos_value, start_date, end_date, insert_time, modification_time, creator_id, modifier_id, program_id,
+ exam_center_code, preferred_branch_1, preferred_branch_2, preferred_branch_3, preferred_branch_4, preferred_branch_5, cocurricular_activities, staff_ward, document_path, application_type, father_income, mother_income, guardian_income, locality, hostel_required, ever_expelled, staff_ward_code, computation_flag, exam_center1, exam_center2, exam_center3)
+select #applicationNumber#,#registrationNumber#,null,cos_value,start_date,end_date,now(),null,#applicationNumber#,null,#programID#,
+exam_center_code,#grouping#,#mainGroup#,#paperCode#,null,null,null,null,null,'E',father_income,mother_income,
+guardian_income,locality,hostel_required,ever_expelled,staff_ward_code,'N','AG',null,null
+ from student_registration where student_id=#applicationNumber# limit 1
+</insert>
+
+<insert id="addInSCL">
+insert into student_call_list
+(program_id, registration_number, component_id, marks_percentage, marks_obtained, total_marks, computed_marks, computed_Marks_roundoff, best_score, entity_id, branch_code, score, actual_computed_marks, actual_computed_marks_roundoff, board_id, start_date, end_date, insert_time, modification_time, creator_id, modifier_id, specialization_code, dei_student, other_board_name, other_branch_name, gate_year, gate_rank, gate_total_appeared_candidates, gate_branch, passing_year, result_awaited, examination_option_code, subject_option_code, rank_n, percentile_n)
+select #programID#, #registrationNumber#, pc.component_id,coalesce(marks_percentage,0), coalesce(marks_obtained,0),  coalesce(total_marks,0), null, '0', '0', #universityID#, null, null, null,
+'0', board_id, coalesce(start_date,'2019-07-01'), coalesce(end_date,'2020-06-30'), now(), null, #applicationNumber#, null, null, coalesce(dei_student,''), other_board_name, 
+other_branch_name, gate_year, gate_rank, gate_total_appeared_candidates, gate_branch, passing_year,
+set1.result_awaited, examination_option_code, subject_option_code, '0', '0.00' from  program_components pc left join
+(select scl.* from student_call_list scl join applicant_program_registration apr on scl.registration_number=apr.registration_number
+where application_number=#userID#
+group by component_id)set1 on pc.component_id=set1.component_id
+where   pc.program_id=#programID#;
+</insert>
+
+<insert id="addInStudentPaper">
+insert into student_paper
+(program_id, registration_number, form_number, paper_code, start_date, end_date, insert_time, modification_time, creator_id, modifier_id, grouping_id, main_group)
+select #programID#, #registrationNumber#, null, paper_code, start_date, end_date, now(), null,  #applicationNumber#,null,grouping_id, main_group
+from student_paper sp join applicant_program_registration apr on sp.registration_number=apr.registration_number
+where application_number=#userID# group by paper_code;
+</insert>
+
+<insert id="addInSTN">
+insert into student_test_number
+(program_id, entity_id, branch_code, registration_number, test_number, called, cos_value, sum_computed_marks, sum_computed_marks_old, sum_computed_marks_roundoff, sum_actual_computed_marks, sum_actual_computed_marks_old, sum_actual_computed_marks_roundoff, reason_code, reason_code_admitcard, status, status_admitcard, end_date, start_date, specialization_code, email_sent_status, mail_sent_time, email_error_reason, modification_time, best_score, academic_score)
+SELECT #programID#, #universityID#, null, #registrationNumber#, #userID#, 'Y', cos_value, null, '0',
+'0', '0', '0','0', null, null, status, null, end_date, start_date, null, null, null, null, null, null,null
+ FROM student_test_number stn join applicant_program_registration apr on apr.registration_number=stn.registration_number
+where application_number=#userID# limit 1;
+</insert>
+
+<select id="getPrefferedBranchFlag" resultClass="java.lang.String">
+select if(preffered_choice_allowed is null or preffered_choice_allowed = '', 'N',preffered_choice_allowed)  from program_master as pm
+where pm.program_id = #programId#;
+</select>
+
+<select id="programBranches" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select br.component_code code, br.component_description description, pm.program_name otherProperty1 
+from program_branch_specialization as pbs
+join system_table_two as br on br.component_code = pbs.branch_id and br.group_code = 'BRNCOD'
+join program_master as pm on pm.program_id = pbs.program_id
+where pbs.program_id = #programId#
+order by description asc;
+</select>
+</sqlMap>

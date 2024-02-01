@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+        
+<sqlMap namespace="userform">
+
+ <select id="getuserformlocations" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+select * from userform_control where group_code='UF' and status='ACT';
+</select>
+
+
+<select id="getExamCenterfortest" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+select component_code as examCenter from system_table_two where group_code='CENCOD' and component_description =#examCenter#;
+</select>
+
+ <select id="getsession" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+select substr(value,3,2) as session from system_values where code='ADMSSN';
+</select>
+
+
+	<update id="update_userform_download">
+		update userform_download set upload='Y',upload_time=now() where seq_number=#SequenceNumber#;
+	</update>
+
+
+<update id="updatefilesta">
+		update system_values set value =#value#  where code ='FILSTA';
+	</update>
+
+<update id="updateuplsta">
+		update system_values set value =#value#  where code ='UPLSTA';
+	</update>
+
+ <select id="checkexcelfile" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+select * from userform_download where seq_number=#SequenceNumber#;
+</select>
+
+	<select id="getSystemValues" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+		SELECT value sequenceNumber
+		FROM system_values
+		WHERE university_id=#universityId# AND code=#ugpg#
+	</select>
+	
+	<select id="getpapergroupUserForm" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+		select ppc.grouping_id 'grouping',ppc.Main_Group as mainGroup,ppc.paper_code as papercode from program_paper_code ppc join
+		system_table_two stt on ppc.paper_code=stt.component_code  where stt.group_code  ='PAPCOD'
+		and ppc.program_id=#programName# and stt.component_description = #paperDis# and ppc.Main_group_description=#paperGroup#;
+        
+	</select>
+	
+<insert id="insert_userform_download">
+insert into userform_download (seq_number, download,download_time) values(#SequenceNumber#,'Y',now());
+</insert>
+
+	<insert id="setStudentPaperUserForm">
+		INSERT INTO student_paper
+		(program_id,registration_number,paper_code,
+		start_date,end_date,insert_time,creator_id,grouping_id,main_group)
+		VALUES
+		(#programName#,#registrationNumber#,#papercode#,
+		#startdate#,#enddate#,now(),#userId#,#grouping#,#mainGroup#);
+	</insert>
+	
+	<select id="getProgramFee" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+        select fee from program_form where program_id=#programName#;
+	</select>
+	
+	<select id="getProgramCode" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+        select program_code from program_master where program_id=#programName#;
+	</select>
+	
+		<insert id="setStudentApplicationStatusUserForm">
+	
+		INSERT INTO student_application_status 
+		(application_status,application_number,email_id,session_start_date,session_end_date,university_id,tab_status)
+		VALUES ('A',#appnumber#,#email_id#,#startdate#,#enddate#,#universityId#,'2')
+		
+	</insert>
+	
+	
+		<insert id="setStudenttestNumberUserForm">
+INSERT INTO student_test_number(program_id, entity_id, 
+ registration_number, test_number, called, cos_value,
+   reason_code, status, end_date, start_date) values (#programName#,#entityId#,#registrationNumber#, #appnumber#, 'Y',#cos#,'userform',
+   'Eligible',#enddate#,#startdate#);
+		
+	</insert>
+	
+		<update id="updateSystemValuesUserForm">
+		UPDATE system_values
+		SET value=#SequenceNumber#
+		WHERE university_id=#universityId# AND code=#ugpg# and value=#oldSequenceNumber#
+	</update>
+	
+	
+	<insert id="setApplicantProgramRegistrationUserForm">
+		INSERT INTO applicant_program_registration 
+		(user_name,registration_number,program_id,application_number,session_start_date,session_end_date,creator_id,insert_time)
+		VALUES (#email_id#,#registrationNumber#,#programName#,#appnumber#,#startdate#,#enddate#,#userId#,now())
+	</insert>
+	
+	
+	<insert id="setApplicantAccountInfo">
+insert into applicant_account_info
+(first_name,  email_id, password, father_name,
+date_of_birth, gender, phone_number, state, creator_id,
+ insert_time,  mother_name,
+ category,  nationality, religion, city, status,
+ user_name, student_id,session_start_date,session_end_date)
+values (#candidateName#, #email_id#,
+sha1(#password#), #fatherName#, #dob#,
+#gender#, #phoneNumber#,#state#, 'UserForm', now(),
+#MotherName#, #category#,
+#nationality#, #religion#, #city#, 'ACT',
+#appnumber#, #studentId#,#startdate#,#enddate#)
+	</insert>
+	
+	
+        <insert id="setEntityStudentUserform">
+		INSERT INTO entity_student
+		(university_id,student_id,first_name,
+		primary_email_id,date_of_birth,category_code,gender,
+		father_first_name,
+		mother_first_name,
+		registered_in_session,insert_time,creator_id,nationality,religion,minority,marital_status,physical_handicap,application_number
+		,father_income,mother_income,guardian_income,hostel_required,ever_expelled)
+		VALUES
+		(#universityId#,#studentId#,#candidateName#,
+		#email_id#,#dob#,#category#,#gender#,
+		#fatherName#,
+		#MotherName#,
+		CONCAT(SUBSTR(#sessionStartDate#,1,4),'-',SUBSTR(#sessionEndDate#,3,2)),now(),#userId#,#nationality#,#religion#,#minority#,
+		#meritalstatus#,#phyhandicaped#,#appnumber#,#fatherincome#,#motherincome#,#gardianincome#,#hostel#,'N')
+	</insert>	
+	
+	<insert id="setStudentAddressUserForm">
+		INSERT INTO admission_addresses_master
+		(user_type,user_id,address_key,address_line1,address_line2,city,
+		state,pincode,home_phone,insert_time,creator_id,country,district)
+		VALUES
+		('STD',#studentId#,'COR',#addressline1#,#addressline2#,#city#,
+		#state#,#pincode#,#phoneNumber#,now(),#userId#,'IN',#city#)
+	</insert>
+	
+	<insert id="setStudentRegistrationUserForm">
+	     INSERT INTO student_registration
+		(student_id,registration_number,cos_value,start_date,end_date,insert_time,creator_id,program_id, staff_ward,cocurricular_activities,
+		application_type,
+		father_income,mother_income,guardian_income,locality,hostel_required,ever_expelled,staff_ward_code,exam_center1)
+		VALUES
+		(#studentId#,#registrationNumber#,#cos#,#startdate#,#enddate#,now(),#userId#,#programName#, #staff_status#,#cca#,
+		'P',
+		#fatherincome#,#motherincome#,#gardianincome#,'U',#hostel#,'NO',#staff_code#,#examCenter#)
+		</insert>
+	
+	
+	
+	
+	<update id="updateSystemValues">
+		UPDATE system_values
+		SET value=#sequenceNumber#
+		WHERE university_id=#universityId# AND code=#ugpg# and value=#oldSequenceNumber#
+	</update>	
+	
+	
+	
+	<select id ="getStudentId" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+
+    	SELECT DISTINCT student_id studentId
+		FROM entity_student
+		WHERE primary_email_id=#email_id#
+    	
+	</select>
+	
+	<select id ="getentityid" resultClass="in.ac.dei.edrp.admissionsystem.userform.UserFormBean">
+	select offered_by as entityId from program_offered_by where program_id =#programName# group by offered_by limit 1 ;
+	</select>
+	
+ </sqlMap>

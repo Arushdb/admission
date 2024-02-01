@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+        
+<sqlMap namespace="loginmenu" >
+
+<select id="GetUserRecord" resultClass="in.ac.dei.edrp.admissionsystem.administration.login.loginBean">
+select panel_authority as authority,user_id as modifier from edit_panel_authority
+where user_name=#userName#and password=sha1(#password#)
+and status='ON';
+</select>
+
+<select id="CheckUserId" resultClass="in.ac.dei.edrp.admissionsystem.administration.login.loginBean">
+select * from edit_panel_authority where user_id=#modifier# and status ='ON'
+</select>
+
+
+
+ </sqlMap>

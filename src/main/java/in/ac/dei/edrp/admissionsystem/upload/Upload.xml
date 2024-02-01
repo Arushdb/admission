@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!DOCTYPE sqlMap
+PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+"http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+
+<sqlMap namespace="uploadDocs">
+
+<update  id="updateStatusWithDocumentPath">
+update student_application_status as sas
+join system_values as sv on sv.university_id=sas.university_id and
+STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d')=sas.session_start_date and
+STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d')=sas.session_end_date and sv.code='ADMSSN'
+set sas.application_status=#applicationStatus# , sas.application_document_path=#documentPath#,
+sas.tab_status=#tabStatus#
+where sas.application_number=#applicationNumber# and sas.university_id=sv.university_id;
+</update>
+
+
+<select id="getDocumentSize" resultClass="in.ac.dei.edrp.admissionsystem.upload.UploadDocumentBean">
+select value as docId from system_values where code=#documentType#;
+</select>
+
+</sqlMap>

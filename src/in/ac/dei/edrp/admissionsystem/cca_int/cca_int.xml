@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+        
+<sqlMap namespace="ccaint" >
+
+
+
+
+
+<select id="checkRecord" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select rollno as app_number,registration_number,evaluation_component,program_id,marks,attended from student_final_marks
+ where rollno=#application_number# and evaluation_component =#flag# 
+  and sub_status is null group by rollno ;
+</select>
+
+
+
+<select id="GetCandidateList" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select set1.*,set2.first_name as candidateName,set2.father_first_name
+as fatherName,set2.category_code as category,set2.gender as gender from
+(
+select sfm1.rollno as app_number,sfm1.registration_number,sfm1.marks as cca ,
+sfm2.marks as interview , DATE_FORMAT(sfm1.insert_time,'%d/%m/%Y') as insert_Date from student_final_marks sfm1
+join student_final_marks sfm2
+on sfm1.registration_number =sfm2.registration_number where sfm1.evaluation_component='CA'
+and sfm2.evaluation_component='PW' and sfm1.creator_id =#creator#)set1
+join
+(select * from entity_student )set2
+on set1.app_number=set2.application_number;
+</select>
+
+
+<select id="GetCandidateListConditional" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select set1.*,set2.first_name as candidateName,set2.father_first_name
+as fatherName,set2.category_code as category,set2.gender as gender from
+(
+select sfm1.rollno as app_number,sfm1.registration_number,sfm1.marks  , DATE_FORMAT(sfm1.insert_time,'%d/%m/%Y') as insert_Date from student_final_marks sfm1
+where sfm1.evaluation_component=#evaluation_component#
+and sfm1.creator_id =#creator#)set1
+join
+(select * from entity_student )set2
+on set1.app_number=set2.application_number;
+</select>
+
+
+<select id="GetCandidateRecord" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+
+select set1.*,set2.interview,set2.cca from
+(select application_number,first_name as candidateName ,father_first_name as fatherName ,
+gender,category_code as category
+from entity_student where application_number =#application_number#)set1
+join
+(select sfm1.sub_status as sub_status_int,sfm2.sub_status as sub_status_cca,sfm1.rollno as app_number,
+sfm1.registration_number,sfm1.evaluation_component,sfm1.program_id,
+sfm1.marks as interview,sfm2.marks as cca,sfm1.attended from student_final_marks sfm1
+join student_final_marks sfm2 on sfm1.registration_number =sfm2.registration_number
+ and sfm1.program_id=sfm2.program_id
+where sfm1.rollno=#application_number# and sfm1.evaluation_component ='PW' and sfm2.evaluation_component='CA'
+ group by sfm1.rollno )set2
+on set1.application_number=set2.app_number
+
+</select>
+  
+<update id="EnableUserCCA">
+update student_final_marks set sub_status='ALW',modifier_id=#modifier#,modification_time=now()
+ where rollno=#application_number# and evaluation_component ='CA'
+and sub_status='SUB' ;
+</update>
+
+<update id="EnableUserINT">
+update student_final_marks set sub_status='ALW',modifier_id=#modifier#,modification_time=now()
+ where rollno=#application_number# and evaluation_component ='PW'
+and sub_status='SUB' ;
+</update>
+
+<update id="EnableUserBOTH">
+update student_final_marks set sub_status='ALW',modifier_id=#modifier#,modification_time=now()
+ where rollno=#application_number# and evaluation_component in ('CA','PW')
+and sub_status='SUB' ;
+</update>
+
+
+<select id="checkRecord1" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select rollno as app_number,registration_number,evaluation_component,program_id,marks,attended from student_final_marks
+ where rollno=#application_number# and evaluation_component =#flag# 
+  and sub_status='ALW' group by rollno ;
+</select>
+
+<select id="checkRecord_both" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select if(sfm1.sub_status is null,'',sfm1.sub_status) as sub_status_int,if(sfm2.sub_status is null,'',sfm2.sub_status) as sub_status_cca,sfm1.rollno as app_number,sfm1.registration_number,sfm1.evaluation_component,sfm1.program_id,
+sfm1.marks as interview,sfm2.marks as cca,sfm1.attended from student_final_marks sfm1
+join student_final_marks sfm2 on sfm1.registration_number =sfm2.registration_number
+ and sfm1.program_id=sfm2.program_id
+where sfm1.rollno=#application_number# and sfm1.evaluation_component ='PW' and sfm2.evaluation_component='CA'
+ group by sfm1.rollno ;
+</select>
+
+
+
+<select id="candidateInfo" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select application_number,first_name as candidateName ,father_first_name as fatherName ,gender,category_code as category
+from entity_student where application_number =#application_number#;
+</select>
+
+<update id="updateBothMarks">
+
+</update>
+
+<update id="updateMarks">
+
+update student_final_marks set marks=#marks#,attended='P',
+sub_status='SUB',insert_time=now(),creator_id=#creator#
+where rollno =#application_number# and evaluation_component=#flag# ;
+
+</update>
+
+<select id="GetUserRecord" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select panel_authority as authority,user_id as modifier from edit_panel_authority
+where user_name=#userName#and password=sha1(#password#)
+and status='ON';
+</select>
+
+<select id="GetRecordToVerify" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select user_id as creator,panel_authority as authority  from edit_panel_authority where user_id=#creator#;
+</select>
+
+ <select id="getCCAandInt" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+ <!-- 
+select application_number ,interview,cca from marks_entry_panel where CCA_marks_flag='SUB'
+and Interview_marks_flag='SUB' and Present_status ='P' and update_flag ='N'
+and cca <![CDATA[<>]]> '-1' and interview <![CDATA[<>]]> '-1'  and application_number ='100458' ;
+ -->
+ 
+ select application_number ,interview,cca from marks_entry_panel where  Present_status ='P' and update_flag ='N' ;
+</select>
+
+
+ <select id="getBindedApplication" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select count(*) as count,set3.program_id,set3.entity_id,set3.registration_number ,
+set3.app_number from (select set1.entity_id,set2.evaluation_component,set1.app_number,
+set1.registration_number,set1.program_id,set1.program_name from (select sas.application_number as app_number,
+stn.registration_number,stn.program_id,stn.entity_id,pm.program_name from student_application_status sas 
+join student_test_number stn on sas.application_number=stn.test_number join program_master pm on pm.program_id =stn.program_id 
+where sas.binded_application_number in (select binded_application_number from student_application_status
+ where application_number in(#application_number#)) and stn.called='Y')set1 left join (select registration_number,evaluation_component 
+ from student_final_marks where evaluation_component in ('PW','CA') )set2 on set1.registration_number=set2.registration_number)
+  set3 group by set3.program_id order by count(*) desc
+</select>
+
+
+
+ <select id="getUnBindedApplication" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select set3.reg_no as registration_number,set3.program_id,set3.entity_id,count(*)as
+ count from(select set1.registration_number as reg_no,set1.program_id,set1.entity_id ,
+ set2.registration_number from (select registration_number,program_id,entity_id from
+  student_test_number stn where stn.test_number =#application_number# and stn.called='Y')set1
+   left join (select  registration_number from student_final_marks sfm  where evaluation_component in ('PW','CA'))set2
+    on set1.registration_number =set2.registration_number )set3 group by set3.reg_no
+</select>
+
+
+
+ <select id="getotherApplication" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select test_number as application_number,registration_number,program_id, 
+entity_id from student_test_number where test_number =#application_number# and called ='Y'
+</select>
+
+
+ <select id="getrecordstoinsert" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select evaluation_component from student_final_marks where program_id
+ =#program_id# and registration_number =#registration_number# and evaluation_component in ('CA','PW')
+</select>
+
+<insert id="insertPW">
+insert into student_final_marks select #program_id#, #entity_id#,#registration_number#, 'PW', marks,
+ branch_code, 'A', start_date, end_date, now(), now(), 
+'atul', modifier_id, specialization_code, testid, #application_number#, null from student_final_marks limit 1
+</insert>
+
+<insert id="insertCA">
+insert into student_final_marks select #program_id#, #entity_id#,#registration_number#, 'CA', marks,
+ branch_code, 'A', start_date, end_date, now(), now(), 
+'atul', modifier_id, specialization_code, testid, #application_number#, 
+null from student_final_marks limit 1
+</insert>
+
+<update id="updateCA">
+update  student_final_marks set marks =#cca#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='CA' and attended='A';
+ 
+ <!-- 
+ update  student_final_marks set marks =#cca#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='CA' ;
+  -->
+</update>
+
+
+
+<update id="updateCAcoditional">
+ 
+ update  student_final_marks set marks =#cca#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='CA' ;
+
+</update>
+
+
+
+<update id="updatePW">
+update  student_final_marks set marks =#interview#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='PW' and attended='A';
+ 
+ <!-- 
+ update  student_final_marks set marks =#interview#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='PW';
+  -->
+</update>
+
+<update id="updatePWcoditional">
+ 
+ update  student_final_marks set marks =#interview#,attended='P'
+ where registration_number =#registration_number# and evaluation_component='PW' ;
+
+</update>
+
+<select id="checkCA" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select marks as cca from student_final_marks 
+ where registration_number =#registration_number# and evaluation_component='CA' and attended='P';
+</select>
+
+
+<select id="checkCAforInsert" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select marks as cca from student_final_marks
+ where registration_number =#registration_number# and evaluation_component='CA';
+</select>
+<select id="checkPWforInsert" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select marks as cca from student_final_marks
+ where registration_number =#registration_number# and evaluation_component='PW';
+</select>
+
+<select id="checkPW" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select marks as interview from student_final_marks 
+ where registration_number =#registration_number# and evaluation_component='PW' and attended='P';
+</select>
+
+<select id="getDuplicateStudent" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select * from
+(
+select application_number,count(*) as cc,class as program_id from marks_entry_panel
+group by application_number order by application_number )set1  where set1.cc<![CDATA[>]]>1  ;
+</select>
+
+<select id="getMaxMarks" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select max(interview) as interview,max(cca) as cca ,application_number,class as program_id
+ from marks_entry_panel where application_number =#application_number#;
+</select>
+<select id="checkSFMforUpdation" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select a1.marks as CA , a2.marks as PW , a1.attended from student_final_marks a1
+join student_final_marks a2
+on a1.rollno =a2.rollno and a1.program_id=a2.program_id
+where a1.evaluation_component in ('CA')  and a2. evaluation_component
+in ('PW') and a1.rollno=#application_number#  <!--  and a1.program_id =#program_id# -->;
+</select>
+
+<update id="updateDuplicateMarks">
+update marks_entry_panel set interview =#interview#,
+cca=#cca#,update_flag='N',Present_status='P',interview_marks_flag='duplication',
+modification_time=now() 
+where application_number =#application_number#
+and class=#program_id#;
+</update>
+
+
+<update id="finalCountUpadate">
+update  marks_entry_panel set update_flag ='U',count_update=#count_update# where application_number =#application_number#;
+</update>
+
+<select id="checkcca_inttable" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+
+select * from cca_int_marks_upload where program_id=#program_id#
+ and application_number =#application_number#;
+ 
+  <!--  
+ select * from cca_int_marks_upload where application_number =#application_number#;
+ -->
+</select>
+	
+	<insert id="InsertETMarks">
+	insert into cca_int_marks_upload (program_id, application_number, cca, interview, present_status, insert_time) 
+	values (#program_id#,#application_number#,#cca#,#interview#,#flag#,now());
+	</insert>
+	
+	
+	
+	
+	
+	<select id="checkcca_inttableforCorrection" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+	
+<!--  
+	select * from
+marks_entry_panel where application_number =#application_number#
+ and class=#program_id#;
+-->
+ 
+    
+ 	select * from
+marks_entry_panel where application_number =#application_number#;
+ 
+	</select>
+	
+	
+		<select id="verifyMarksforDefalter" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+		<!--  
+select pm.program_name,sfm.rollno as application_number,sfm.registration_number
+from student_final_marks sfm
+join program_master pm on pm.program_id =sfm.program_id
+where registration_number =#registration_number#
+and evaluation_component in ('PW','CA') and marks='0' and attended='P';
+-->
+select pm.program_name,sfm.rollno as application_number,sfm.registration_number
+from student_final_marks sfm
+join program_master pm on pm.program_id =sfm.program_id
+where registration_number =#registration_number#
+and evaluation_component in (#category#) and marks='0' and attended='P';
+
+
+	</select>
+	
+	
+	
+		<select id="getNameforDefalter" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+select pm.program_name as ProgramName,es.application_number,stn.registration_number from student_test_number stn
+join entity_student es on es.application_number =stn.test_number
+join program_master pm on pm.program_id =stn.program_id
+where stn.registration_number =#registration_number#  and stn.called ='Y';
+	</select>
+	
+	
+	
+	
+	
+	<update id="UpdateCCA_INT_marks_fromTeacher">
+	
+  <!--  
+	update marks_entry_panel set cca=#cca#,interview =#interview#,modification_time=now(),present_status=#flag#,update_flag='N'
+	where application_number=#application_number# and class=#program_id#;
+	 -->
+	
+  
+	update marks_entry_panel set cca=#cca#,modification_time=now(),update_flag='N'
+	where application_number=#application_number# ;
+	
+	  
+	  <!-- 
+	update marks_entry_panel set interview =#interview#,modification_time=now(),update_flag='N'
+	where application_number=#application_number#;
+	 -->
+	
+	</update>
+	
+	
+	<update id="UpdateCCA_INT_marks_fromCouncil1">
+	update marks_entry_panel
+set CCA_OLD=CCA,INT_OLD=interview
+ where
+application_number =#application_number# and class=#program_id#;
+	</update>
+	
+	
+	<update id="UpdateCCA_INT_marks_fromCouncil2">
+update marks_entry_panel
+set CCA=#cca#,interview=#interview#,modification_time=now(),update_flag='N'
+ where
+application_number =#application_number# and class=#program_id#;
+	</update>
+	
+	
+	<select id="getBlankCandidatesRecord" resultClass="in.ac.dei.edrp.admissionsystem.cca_int.cca_intBean">
+
+	<!--  
+select pm.program_name,mep.application_number,es.first_name ,if (interview='-1','',interview)
+as interview,if(cca='-1','',cca)as cca from
+marks_entry_panel mep
+join entity_student es on es.application_number =mep.application_number
+join program_master pm on pm.program_id =mep.class
+where
+mep.present_status ='P' and mep.cca = '-1'
+or mep.interview = '-1' group by mep.application_number ;
+-->
+
+select * from
+(
+select pm.program_name,mep.application_number,es.first_name ,interview, cca from
+marks_entry_panel mep
+join entity_student es on es.application_number =mep.application_number
+join program_master pm on pm.program_id =mep.class
+where
+mep.present_status ='P' and mep.cca = '-1'
+or mep.interview = '-1'  group by mep.application_number)set1 ;
+
+
+	</select>
+	
+	
+
+	
+	
+	
+	<!-- 
+	insert into
+marks_entry_panel
+select application_number, interview, cca, now(), 'XX', 'XX', program_id,
+'2016-07-01', '2017-06-30', 'SUB',
+'SUB', present_status, 'N', '0','0' , '0' from
+cca_int_marks_upload ;
+	 -->
+	
+ </sqlMap>

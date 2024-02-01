@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+      
+    <!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN"
+    "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+  
+
+<sqlMapConfig>
+<settings useStatementNamespaces="true"/>  
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/account/Account.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/application/TEST.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/upload/Upload.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/applicationinfo/ApplicationInfo.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/common/Common.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/paymentDetails/Payment.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/cca_int/cca_int.xml"/>	
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/report/Report.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/administration/login/login.xml"/>
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/transfer/Transfer.xml"/>	
+	
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/addMoreProgram/addMoreProgram.xml"/>
+
+<sqlMap resource="in/ac/dei/edrp/admissionsystem/update_exam_center/update_exam_center.xml"/>
+</sqlMapConfig>

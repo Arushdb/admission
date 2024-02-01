@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="update_exam_center">
+ 
+ <select id="getExamCenterList" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+ 	select component_code code, component_description description from system_table_two where group_code in ('CENCDD','CENCOD') and component_code != '--'
+	order by component_description asc;
+ </select>
+ 
+ <select id = "checkLogin" resultClass = "java.lang.String">
+ 	select first_name from applicant_account_info where user_name = #applicationNumber# and password = sha1(#password#);
+ </select>
+ 
+ <update id = "updateExamCenterCode">
+ 	update applicant_program_registration as apr
+	join student_registration as sr on sr.registration_number = apr.registration_number and apr.program_id = sr.program_id
+	set sr.exam_center1 = #examCenterCode#, sr.modification_time = now()
+	where apr.application_number = #applicationNumber#;
+ </update>
+ 
+ <select id = "checkExamCenter" resultClass = "java.lang.String">
+ 	select ec.component_description from applicant_program_registration as apr
+	join student_registration as sr on sr.registration_number = apr.registration_number and apr.program_id = sr.program_id
+	join system_table_two as ec on ec.component_code = sr.exam_center1 and ec.group_code in ('CENCDD','CENCOD')
+	where apr.application_number = #applicationNumber#;
+ </select>
+ 
+</sqlMap>

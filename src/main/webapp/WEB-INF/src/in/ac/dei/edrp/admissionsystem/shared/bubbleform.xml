@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+        
+ <sqlMap namespace="bubbleform">
+ 
+ 
+  <select id="checkfortransferapp" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+
+
+select es.first_name as candidateName ,es.father_first_name as fatherName,es.mother_first_name as
+MotherName,es.date_of_birth as dob,es.gender,es.category_code as category,es.physical_handicap as phyhandicaped,
+sr.exam_center1 as examCenter,
+aam.address_line1 as addressline1,aam.address_line2 as addressline2,aam.city,aam.state,aam.pincode,aam.home_phone as phoneNumber
+, es.primary_email_id as email_id,sas.application_document_path as DocPath,sas.verification_status as verification
+ from entity_student es
+join admission_addresses_master aam on aam.user_id=es.student_id
+join student_registration sr on aam.user_id=sr.student_id
+join student_application_status sas on sas.application_number =es.application_number
+where es.application_number =#transferapp# and aam.address_key='COR' group by es.student_id;
+
+
+
+</select>
+ 
+ 
+ <select id="getuserformlocations" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT' order by col;
+</select>
+
+ <select id="BEDpaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001009'order by col;
+</select>
+
+ <select id="BBMpaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001080'order by col;
+</select>
+
+
+ <select id="BApaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001003' order by col;
+</select>
+
+
+ <select id="BApapercomp" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and
+status='ACT'and program_id ='0001003'  and title like '%COMP%' order by col;
+</select>
+
+ <select id="BASocScicomp" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and
+status='ACT'and program_id =#programName#  and title like '%COMP%' order by col;
+</select>
+
+
+
+ <select id="BASocSci" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001090' order by col;
+</select>
+
+
+ <select id="DOCPATH" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select Description as DocPath from userform_control where title='DOCPATH';
+</select>
+
+
+
+ <select id="BCOMpaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001070' order by col;
+</select>
+
+ <select id="BSCpaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id ='0001057' order by col;
+</select>
+
+
+ <select id="GetOptionalPaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id =#programName# order by col;
+</select>
+
+ <select id="GetOptionalPaperG1" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id =#programName# and code='G1' order by col;
+</select>
+
+ <select id="GetOptionalPaperG2" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id =#programName# and code='G2' order by col;
+</select>
+
+ <select id="GetOptionalPaperG3" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and status='ACT'and program_id =#programName# and code='G3' order by col;
+</select>
+
+ <select id="GetCompPaper" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where group_code='BF' and
+status='ACT'and program_id =#programName#  and title like '%COMP%' order by col;
+</select>
+
+
+
+
+ <select id="MAprog" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where code ='PG'  and status ='ACT' and group_code ='BF' order by col;
+</select>
+
+
+ <select id="MAPAPER" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select * from userform_control where code ='PG'  and status ='ACT' and group_code ='BF'
+and program_id ='0001126' and title ='COMP' order by col;
+</select>
+
+
+ <select id="papersum" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select sum(min_choice)as papsum from
+(
+select * from program_paper_code where program_id =#programName#
+group by main_group, grouping_id, min_choice, max_choice
+) ppc
+group by main_group;
+</select>
+
+ <select id="EntitySession" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+select concat(SUBSTR(value,1,4),"-",SUBSTR(value,5,2),"-",SUBSTR(value,7,2)) as startdate,
+concat(SUBSTR(value,9,4),"-",SUBSTR(value,13,2),"-",SUBSTR(value,15,2))as enddate,concat(SUBSTR(value,1,4),"-",SUBSTR(value,11,2))as session from system_values where code ='ADMSSN';
+</select>
+
+
+<select id="getSystemValues" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+		SELECT value sequenceNumber
+		FROM system_values
+		WHERE university_id=#universityId# AND code=#ugpg#
+	</select>
+
+	<update id="updateSystemValuesUserForm">
+		UPDATE system_values
+		SET value=#SequenceNumber#
+		WHERE university_id=#universityId# AND code=#ugpg# and value=#oldSequenceNumber#
+	</update>
+
+        <insert id="setEntityStudentUserform">
+		INSERT INTO entity_student
+		(university_id,student_id,first_name,
+		primary_email_id,date_of_birth,category_code,gender,
+		father_first_name,
+		mother_first_name,
+		registered_in_session,insert_time,creator_id,nationality,religion,minority,marital_status,physical_handicap,application_number
+		,father_income,mother_income,guardian_income,hostel_required,ever_expelled)
+		VALUES
+		(#universityId#,#studentId#,#candidateName#,
+		#email_id#,#dob#,#cosval#,#gender#,
+		#fatherName#,
+		#MotherName#,
+		#session#,now(),'bubble',#nationality#,#religion#,#minority#,
+		#meritalstatus#,#phyhandicaped#,#appnumber#,#fatherincome#,#motherincome#,#gardianincome#,#hostel#,'N')
+	</insert>	
+	
+	<insert id="setStudentAddressUserForm">
+		INSERT INTO admission_addresses_master
+		(user_type,user_id,address_key,address_line1,address_line2,city,
+		state,pincode,home_phone,insert_time,creator_id,country,district)
+		VALUES
+		('STD',#studentId#,'COR','bubble',#addressline2#,#city#,
+		#state#,#pincode#,#phoneNumber#,now(),'bubble','IN',#city#)
+	</insert>
+	
+	<insert id="setStudentAddressUserFormtransfer">
+		INSERT INTO admission_addresses_master
+		(user_type,user_id,address_key,address_line1,address_line2,city,
+		state,pincode,home_phone,insert_time,creator_id,country,district)
+		VALUES
+		('STD',#studentId#,'COR',#addressline1#,#addressline2#,#city#,
+		#state#,#pincode#,#phoneNumber#,now(),'bubble','IN',#city#)
+	</insert>
+	
+		<insert id="setStudentRegistrationUserForm">
+	    INSERT INTO student_registration
+		(student_id,registration_number,cos_value,start_date,end_date,insert_time,creator_id,program_id, staff_ward,cocurricular_activities,
+		application_type,
+		father_income,mother_income,guardian_income,locality,hostel_required,ever_expelled,staff_ward_code,exam_center1)
+		VALUES
+		(#studentId#,#registrationNumber#,#cos#,#startdate#,#enddate#,now(),'bubble',#programName#, #staff_status#,#cca#,
+		'P',
+		#fatherincome#,#motherincome#,#gardianincome#,'U',#hostel#,'NO',#staff_code#,#examCenter#)
+		</insert>
+	
+	<select id="getpapergroupUserForm" resultClass="in.ac.dei.edrp.admissionsystem.userform.BubbleFormBean">
+		select ppc.grouping_id 'grouping',ppc.Main_Group as mainGroup,ppc.paper_code as papercode from program_paper_code ppc join
+system_table_two stt on ppc.paper_code=stt.component_code  where stt.group_code  ='PAPCOD'
+and ppc.program_id=#programName# and stt.component_description=#paperGroup# limit 1;
+	</select>	
+	
+		
+	    <insert id="setStudentPaperUserForm">
+		INSERT INTO student_paper
+		(program_id,registration_number,paper_code,
+		start_date,end_date,insert_time,creator_id,grouping_d,main_group)
+		VALUES
+		(#programName#,#registrationNumber#,#papercode#,
+		#startdate#,#enddate#,now(),#userId#,#grouping#,#mainGroup#);
+	    </insert>
+
+	<insert id="setApplicantProgramRegistrationUserForm">
+		INSERT INTO applicant_program_registration 
+		(user_name,registration_number,program_id,application_number,session_start_date,session_end_date,creator_id,insert_time)
+		VALUES (#email_id#,#registrationNumber#,#programName#,#appnumber#,#startdate#,#enddate#,'bubble',now())
+	</insert>
+	
+			<insert id="setStudenttestNumberUserForm">
+INSERT INTO student_test_number(program_id, entity_id, 
+ registration_number, test_number, called, cos_value,
+   reason_code, status, end_date, start_date) values (#programName#,#entityId#,#registrationNumber#,#appnumber#,'Y',#cos#,'bubble',
+   'Eligible',#enddate#,#startdate#);
+		
+	</insert>
+	
+	
+		<insert id="setApplicantAccountInfo">
+insert into applicant_account_info
+(first_name,  email_id, password, father_name,
+date_of_birth, gender, phone_number, state, creator_id,
+ insert_time,  mother_name,
+ category,  nationality, religion, city, status,
+ user_name, student_id,session_start_date,session_end_date)
+values (#candidateName#, #email_id#,
+sha1(#password#), #fatherName#, #dob#,
+#gender#, #phoneNumber#,#state#, 'bubble', now(),
+#MotherName#, #cosval#,
+#nationality#, #religion#, #city#, 'ACT',
+#appnumber#, #studentId#,#startdate#,#enddate#)
+	</insert>
+	
+<insert id="setStudentApplicationStatusUserForm">
+	
+		INSERT INTO student_application_status 
+		(application_status,application_number,email_id,session_start_date,session_end_date,application_document_path,university_id,tab_status)
+		VALUES ('D',#appnumber#,#email_id#,#startdate#,#enddate#,#DocPath#,#universityId#,'3')
+		
+	</insert>
+
+
+
+<insert id="setStudentApplicationStatusUserFormTrasfer">
+	
+		INSERT INTO student_application_status 
+		(application_status,verification_status,application_number,email_id,session_start_date,session_end_date,application_document_path,university_id,tab_status)
+		VALUES ('D',#verification#,#appnumber#,#email_id#,#startdate#,#enddate#,#DocPath#,#universityId#,'3')
+		
+	</insert>
+
+	
+  </sqlMap>
+ 

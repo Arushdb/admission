@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="report">
+
+		<select id="getPrograms" resultClass="in.ac.dei.edrp.admissionsystem.report.ReportBean">
+			select program_name as programName, pm.program_id programId from program_master pm join program_form pf on pm.program_id=pf.program_id
+			order by pm.program_id
+		</select>
+		<select id="getInterviewlist" resultClass="in.ac.dei.edrp.admissionsystem.report.ReportBean">
+			select cfi.program_id as programId,program_name as programName,application_number as applicationNumber,category as category,gender as gender,
+			name as name,father_name as fatherName from called_for_interview cfi join program_master pm on cfi.program_id=pm.program_id where 
+			print_status='N' and cfi.program_id=#programId# order by application_number,category,gender;
+		</select>	
+		<select id="getSession" resultClass="in.ac.dei.edrp.admissionsystem.report.ReportBean">
+			select substring(value,1,16) as session from system_values where code='ADMSSN';
+		</select>
+		<select id="getProgramName" resultClass="java.lang.String">
+			select program_name as programName from program_master where program_id=#programId#
+		</select>
+		 <insert id="interviewLog">
+		 	insert into interview_log(program_id,before_count,after_count,run_date,user_id) values(#programId#,#beforeCount#,#afterCount#,now(),'haha');
+		</insert>
+		<update id="setStatus">	
+			update called_for_interview set print_status='P' where program_id=#programId#
+		</update>
+<!-- 
+CREATE TABLE `admission_live`.`interview_log` (
+  `program_id` CHAR(7) NOT NULL,
+  `before_count` INTEGER,
+  `after_count` INTEGER,
+  `run_date` DATETIME,
+  `user_id` VARCHAR(150),
+  PRIMARY KEY (`program_id`)
+)
+ENGINE = InnoDB;
+TO DO:
+1. message to user
+2. search for column wise printing of pdf if no method exists then fix columns and add text to that
+3. remove xls and pdf from downloaded folder
+4. format pdf beautifully
+5. download zip from server in dnld function
+ -->
+<select id="getUserList" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select es.first_name as applicantName, es.father_first_name as fatherName, es.application_number applicationNumber,
+sas.session_start_date as sessionStartDate, sas.session_end_date as sessionEndDate, #password# password, #universityID# universityID,
+sas.application_document_path as applicationDocumentPath, 
+if(cca_uploaded is null or cca_uploaded = '','N',cca_uploaded) ccaUploaded, 
+if(ncc_uploaded is null or ncc_uploaded = '', 'N', ncc_uploaded) nccUploaded, 
+if(nss_uploaded is null or nss_uploaded = '', 'N', nss_uploaded) nssUploaded, 
+if(social_uploaded is null or social_uploaded = '', 'N', social_uploaded) socialUploaded
+from entity_student as es
+join applicant_program_registration as apr on apr.application_number = es.application_number
+join program_form as pf on pf.program_id = apr.program_id 
+join applicant_account_info as aai on aai.student_id=es.student_id and aai.user_name=es.application_number
+join system_values as sv on sv.university_id=es.university_id and sv.code='ADMSSN'
+join student_application_status as sas on sas.application_number=es.application_number
+  and sas.session_start_date=concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2))
+    and sas.session_end_date=concat_ws('-',substring(sv.value,9,4),substring(sv.value,13,2),substring(sv.value,15,2))
+      and sv.university_id=sas.university_id and sas.session_start_date=aai.session_start_date and sas.session_end_date=aai.session_end_date
+      where es.application_number=#applicationNumber# and aai.status='ACT' and aai.password=sha1(#password#)
+      and es.registered_in_session=concat_ws('-',substring(sv.value,1,4), substring(sv.value, 11,2))
+      and sv.university_id=#universityID# and sas.tab_status!='' 
+      and sas.application_status = 'D' 
+      group by es.application_number;
+      </select>
+        
+<update id = "updateCCA">
+update student_application_status set cca_uploaded = 'Y'
+where application_number = #applicationNumber#;
+</update>
+
+<update id = "updateNCC">
+update student_application_status set ncc_uploaded = 'Y'
+where application_number = #applicationNumber#;
+</update>
+
+<update id = "updateNSS">
+update student_application_status set nss_uploaded = 'Y'
+where application_number = #applicationNumber#;
+</update>
+
+<update id = "updateSocial">
+update student_application_status set social_uploaded = 'Y'
+where application_number = #applicationNumber#;
+</update> 
+
+<!-- LATERAL ENTRY STARTS -->
+<select id="getUserListLE" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select es.student_first_name as applicantName, es.father_first_name as fatherName, es.roll_number applicationNumber, es.date_of_birth password,
+if(cca_uploaded is null or cca_uploaded = '','N',cca_uploaded) ccaUploaded,
+if(ncc_uploaded is null or ncc_uploaded = '', 'N', ncc_uploaded) nccUploaded,
+if(nss_uploaded is null or nss_uploaded = '', 'N', nss_uploaded) nssUploaded,
+if(social_uploaded is null or social_uploaded = '', 'N', social_uploaded) socialUploaded
+from le_student_master as es
+where es.roll_number=#applicationNumber# and es.date_of_birth = #password#
+</select>
+        
+<update id = "updateCCALE">
+update le_student_master set cca_uploaded = 'Y'
+where roll_number = #applicationNumber#;
+</update>
+
+<update id = "updateNCCLE">
+update le_student_master set ncc_uploaded = 'Y'
+where roll_number = #applicationNumber#;
+</update>
+
+<update id = "updateNSSLE">
+update le_student_master set nss_uploaded = 'Y'
+where roll_number = #applicationNumber#;
+</update>
+
+<update id = "updateSocialLE">
+update le_student_master set social_uploaded = 'Y'
+where roll_number = #applicationNumber#;
+</update> 
+
+<!-- CERTIFICATE PREFERENCE STARTS -->
+<select id="getUserForCertificatePreference" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select es.first_name as applicantName, es.father_first_name as fatherName, es.application_number applicationNumber, es.date_of_birth password
+from entity_student as es
+where es.application_number=#applicationNumber# and es.date_of_birth = #password#
+</select>
+
+<select id="getUserPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_id code, pm.program_name description from applicant_program_registration as apr
+join program_master as pm on pm.program_id = apr.program_id
+join program_form as pf on pf.program_id = pm.program_id and pf.form_number not in ('0013')
+where apr.application_number = #applicationNumber#;
+</select>
+<select id = "preferencePrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select pm.program_id code, pm.program_name description from program_form as pf
+join program_gender_eligibility as pe on pe.program_id = pf.program_id
+join entity_student as es on es.application_number = #applicationNumber#
+join program_master as pm on pm.program_id = pf.program_id
+where pf.minimum_qualification <![CDATA[<=]]> #classPassed#
+and pe.gender like concat('%', es.gender, '%')
+order by pm.program_name asc;
+</select>
+
+<insert id="insertPreferences">
+insert into certificate_preferences (application_number, preference1, preference2, preference3, from_program)
+values (#applicationNumber#,#pref1#,#pref2#,#pref3#,#fromProgram#);
+</insert>
+
+<select id="checkInsertedPreferences" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select es.application_number applicationNumber, pm1.program_name pref1, pm2.program_name pref2, pm3.program_name pref3, es.father_first_name fatherName, es.first_name applicantName
+from certificate_preferences as cp
+join entity_student as es on es.application_number = cp.application_number
+left join program_master as pm1 on pm1.program_id = cp.preference1
+left join program_master as pm2 on pm2.program_id = cp.preference2
+left join program_master as pm3 on pm3.program_id = cp.preference3
+where cp.application_number = #applicationNumber#;
+</select>
+
+<select id="getProgramsShift" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select code, description, otherProperty1 from
+(
+select pm.program_id code, pm.program_name description, cast(at.date as datetime) otherProperty1 from program_form as pf
+join program_master as pm on pm.program_id = pf.program_id
+join admitcard_table as at on at.program_id = pf.program_id
+join system_values as sv on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2)) = at.session_start_date and sv.code = 'ADMSSN'
+) s order by otherProperty1 asc, description asc;
+</select>
+
+<select id="getApplicantsForAttd" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select es.application_number applicationNumber, es.first_name applicantName, es.gender, es.category_code category,
+es.father_first_name fatherName, pm.program_name programName, cn.component_description examCenter, es.aadhar_number aadhaarNumber, aam.home_phone contactNumber,
+sas.application_document_path applicationDocumentPath
+,at.date shift
+from entity_student as es
+join student_application_status as sas on sas.application_number = es.application_number
+join admission_addresses_master as aam on aam.user_id = es.student_id and aam.address_key = 'PER'
+join applicant_program_registration as apr on apr.application_number = es.application_number
+join student_registration as sr on sr.registration_number = apr.registration_number and sr.program_id = apr.program_id
+join system_table_two as cn on cn.component_code = sr.exam_center1 and cn.group_code = 'CENCOD'
+join program_master as pm on pm.program_id = apr.program_id
+join admitcard_vanue as av on av.application_number = apr.application_number and av.program_id = apr.program_id
+join admitcard_table as at on at.program_id = apr.program_id
+where apr.program_id = #code# and at.date = #description#
+and apr.admit_card_available = 'X' and sas.application_status = 'D' and sas.verification_status = 'REC'
+and es.gender like concat('%',#otherProperty1#,'%') and av.center_code like concat('%',#code2#,'%') order by es.application_number, es.category_code;</select>
+<select id="getProgramsShiftVanue" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select code, description, otherProperty1, center_code code2, if(em.entity_id is null, building_name, entity_name) description2 from
+(
+select pm.program_id code, pm.program_name description, cast(at.date as datetime) otherProperty1, a.center_code, bc.building_name from program_form as pf
+join program_master as pm on pm.program_id = pf.program_id
+join admitcard_table as at on at.program_id = pf.program_id
+join (select program_id, center_code from admitcard_vanue group by program_id, center_code) a on a.program_id = pf.program_id
+join building_codes as bc on bc.building_code = a.center_code
+join system_values as sv on concat_ws('-',substring(sv.value,1,4),substring(sv.value,5,2),substring(sv.value,7,2)) = at.session_start_date 
+and sv.code = 'ADMSSN'
+) s
+left join entity_master as em on em.entity_id = center_code
+order by otherProperty1 asc, description asc;
+</select>
+
+<select id="getProgramsIntVanue" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select program_name description, extra description2, interview_board code2 from interview_data_sent as id
+group by program_name, extra, interview_board
+order by extra2 desc, extra, interview_board, program_name asc;
+</select>
+
+<select id="getApplicantsForIntAttd" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select id.application_number applicationNumber, es.first_name applicantName, es.gender, es.category_code category,
+es.father_first_name fatherName, id.program_name programName,
+es.aadhar_number aadhaarNumber, aam.home_phone contactNumber,
+sas.application_document_path applicationDocumentPath
+from interview_data_sent as id
+join entity_student as es on es.application_number = id.application_number
+join admission_addresses_master as aam on aam.user_id = es.student_id and aam.address_key = 'PER'
+join student_application_status as sas on sas.application_number = es.application_number
+and sas.application_status = 'D' and sas.verification_status = 'REC'
+where id.program_name = #description# and es.gender like concat('%',#otherProperty1#,'%') and id.extra = #code2#
+and id.interview_board = #code#
+order by es.application_number asc;
+</select>
+
+<select  id="getDistanceCenters" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select stt.component_code code, stt.component_description description from interview_data_sent as ids
+join system_table_two as stt on stt.component_code = ids.center_code and stt.group_code = 'CENCOD'
+where center_code not in ('0','--') group by center_code
+order by stt.component_description asc;
+</select>
+
+<select id="getAppsForIntAttdDistance" resultClass="in.ac.dei.edrp.admissionsystem.report.Candidate">
+select id.application_number applicationNumber, es.first_name applicantName, es.gender, es.category_code category,
+es.father_first_name fatherName, id.program_name programName,
+es.aadhar_number aadhaarNumber, aam.home_phone contactNumber,
+sas.application_document_path applicationDocumentPath
+from interview_data_sent as id
+join entity_student as es on es.application_number = id.application_number
+join admission_addresses_master as aam on aam.user_id = es.student_id and aam.address_key = 'PER'
+join student_application_status as sas on sas.application_number = es.application_number
+and sas.application_status = 'D' and sas.verification_status = 'REC'
+where id.center_code = #code#
+order by es.gender, id.program_name, es.application_number asc;
+</select>
+</sqlMap>

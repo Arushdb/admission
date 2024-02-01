@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="applicationInfo">
+
+ <select id="getAppsStatus" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+select sas.application_number as code, if(ucase(sas.application_status)!='P', concat(stt.component_description, '. Please Go through the Next Step to complete the Application.'), stt.component_description) as description from student_registration as sr join applicant_program_registration as apr
+on sr.registration_number=apr.registration_number
+and sr.start_date=apr.session_start_date and sr.end_date=apr.session_end_date
+join student_application_status as sas on sas.application_number=apr.application_number
+and sas.session_start_date=apr.session_start_date and sas.session_end_date=apr.session_end_date
+join system_table_two as stt on stt.component_code=sas.application_status and stt.group_code='APPSTS'
+and stt.university_code=sas.university_id
+join system_values as sv on STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d')=apr.session_start_date
+and STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d')=apr.session_end_date and sv.code='ADMSSN'
+and sv.university_id=stt.university_code
+where sr.application_type='E' and apr.user_name='ngupta069@gmail.com';
+</select>
+ 
+ 
+ <select id="getAppliedPrograms" resultClass="in.ac.dei.edrp.admissionsystem.common.CommonBean">
+ select pm.program_id as code, pm.program_name description from student_registration as sr join applicant_program_registration as apr
+on sr.registration_number=apr.registration_number
+and sr.start_date=apr.session_start_date and sr.end_date=apr.session_end_date
+join student_application_status as sas on sas.application_number=apr.application_number
+and sas.session_start_date=apr.session_start_date and sas.session_end_date=apr.session_end_date
+join system_values as sv on STR_TO_DATE(substr(sv.value, 1, 8), '%Y%m%d')=apr.session_start_date
+and STR_TO_DATE(substr(sv.value, 9, 8), '%Y%m%d')=apr.session_end_date and sv.code='ADMSSN'
+and sv.university_id=sas.university_id
+join program_master as pm on pm.program_id=sr.program_id
+where sr.application_type='E' and apr.user_name='ngupta069@gmail.com'
+order by pm.program_name asc;
+ </select>
+ 
+ </sqlMap>

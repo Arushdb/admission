@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ================================================================= -->
+<!--@author Arjun Singh mailto:chauhanarjun.chauhan@gmail.com        -->
+<!-- ================================================================= -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"/>
+
+<bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+<property name="transactionManager">
+<ref bean="transactionManager"/>
+</property>
+</bean>
+
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+<property name="dataSource" ref="dataSource"/>
+</bean>
+    
+<bean name="/account/*.htm" class="in.ac.dei.edrp.admissionsystem.account.AccountController" p:accountDAO-ref="accountDAO" p:applicationDAO-ref="applicationDAO">
+</bean>
+<bean id="accountDAO" class="in.ac.dei.edrp.admissionsystem.account.AccountDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+	<property name="transactionTemplate" ref="transactionTemplate"/>
+</bean>
+
+<bean id="applicationController" name="/application/*.htm" class="in.ac.dei.edrp.admissionsystem.application.ApplicationController" p:applicationDAO-ref="applicationDAO">
+<property name="commonController" ref="commonController"/>
+</bean>
+
+<bean id="applicationDAO" class="in.ac.dei.edrp.admissionsystem.application.ApplicationDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+	<property name="transactionTemplate" ref="transactionTemplate"/>
+	
+</bean>
+
+<bean name="/upload/*.htm" class="in.ac.dei.edrp.admissionsystem.upload.UploadController" p:uploadDAO-ref="uploadDAO" p:applicationController-ref="applicationController">
+<property name="commonController" ref="commonController"/>
+</bean>
+<bean id="uploadDAO" class="in.ac.dei.edrp.admissionsystem.upload.UploadDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+</bean>
+
+<bean id="commonController" name="/common/*.htm" class="in.ac.dei.edrp.admissionsystem.common.CommonController" p:commonDAO-ref="commonDAO"/>
+<bean id="commonDAO" class="in.ac.dei.edrp.admissionsystem.common.CommonDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+</bean>
+
+
+<bean name="/payment/*.htm" class="in.ac.dei.edrp.admissionsystem.paymentDetails.PaymentController" p:paymentDAO-ref="paymentDAO"/>
+<bean id="paymentDAO" class="in.ac.dei.edrp.admissionsystem.paymentDetails.PaymentDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+</bean>
+
+<bean name="/applicationinfo/*.htm" class="in.ac.dei.edrp.admissionsystem.applicationinfo.ApplicationInfoController" p:applicationInfoDAO-ref="applicationInfoDAO"/>
+<bean id="applicationInfoDAO" class="in.ac.dei.edrp.admissionsystem.applicationinfo.ApplicationInfoDAOImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+</bean>
+
+
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver" p:prefix="/WEB-INF/jsp/" p:suffix=".jsp" />
+<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="configLocation" value="classpath:in/ac/dei/edrp/admissionsystem/databasesettings/SqlMapConfig.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+        <property name="useTransactionAwareDataSource" value="true"/>
+</bean>
+
+        <bean name="/userform/*.htm" class="in.ac.dei.edrp.admissionsystem.userform.userformController"
+    p:daoservice-ref="daoservice"/>
+    
+        <bean name="/bubble/*.htm" class="in.ac.dei.edrp.admissionsystem.userform.bubbleController"
+    p:daoservicebubble-ref="daoservicebubble"/>
+          
+		   <bean name="/cca_int/*.htm" class="in.ac.dei.edrp.admissionsystem.cca_int.cca_intController"
+    p:ccaservice-ref="ccaservice"/>
+	
+               <bean name="/login/*.htm" class="in.ac.dei.edrp.admissionsystem.administration.login.loginController"
+    p:loginservice-ref="loginservice"/>
+    		<bean id="addMoreProgramDao" class="in.ac.dei.edrp.admissionsystem.addMoreProgram.addMoreProgramDaoImpl">
+	<property name="sqlMapClient" ref="sqlMapClient" />
+	<property name="transactionTemplate" ref="transactionTemplate"/>
+</bean>	
+	
+   <bean name="/testing/*.htm" class="in.ac.dei.edrp.admissionsystem.testing.testingController"
+   p:accountDAO-ref="accountDAO" p:addMoreProgramDao-ref="addMoreProgramDao"/>
+
+<bean name="/manualmanage/*.htm" class="in.ac.dei.edrp.admissionsystem.manualmanage.ManualManageController" p:accountDAO-ref="accountDAO" p:applicationDAO-ref="applicationDAO">
+	</bean>
+	
+	<bean name="/transfer/*.htm" class="in.ac.dei.edrp.admissionsystem.transfer.TransferController" p:transferDao-ref="transferDao"/>
+	<bean name="/report/*.htm" class="in.ac.dei.edrp.admissionsystem.report.ReportController" p:reportDao-ref="reportDao"/>
+ 	
+</beans>

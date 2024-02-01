@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!-- ================================================================= -->
+<!--@author Nupur Dixit mailto:noopur.here@gmail.com        -->
+<!-- ================================================================= -->
+
+<project name="cms" default="init" basedir=".">
+<tstamp prefix="build-info">
+		<format property="current-date" pattern="d-MMMM-yyyy" locale="en" />
+		<format property="current-time" pattern="hh:mm:ss a z" locale="en" />
+	</tstamp>
+    
+  <property file="build.properties"/>
+
+  <!-- This value is currently set asn_CM a property because
+       the top level cms build.xml file runs the "init" target
+       as part of testing and texen doesn't obey the ${basedir}
+       property so we must pass in the full path to the
+       build.properties for use with the contextProperties attribute.
+  -->
+  <property name="build.properties" value="build.properties"/>
+
+  <path id="classpath">
+    <fileset dir="${admission.home}/WEB-INF/lib">
+      <include name="*.jar"/>
+    </fileset>
+	<fileset dir="${tomcat.home}/lib">
+	  <include name="*.jar"/>
+	</fileset>
+  </path>
+
+
+   <target
+    name="init"
+    description="--> generates the full application">
+    <echo message="####### starting ###########"/>
+    <antcall target="compile"/>
+    <antcall target="copy-props"/>
+       
+  </target>
+
+
+  <!-- ============================================================================ -->
+  <!-- COPY  MESSAGE PROPERTIES, DATABASE SETTING PROPETIES AND DATABASE XML QUERIES-->
+  <!-- ============================================================================ -->
+
+  <target name="copy-props"
+	description="--> copy display and message properties file">
+         <copy todir="${build.dest}/in/ac/dei/edrp/admissionsystem/" overwrite="yes"
+           filtering="yes">
+            <fileset dir="${src.dir}/in/ac/dei/edrp/admissionsystem/" >
+            <patternset>
+                <include name="**/*.properties"/>               
+		<include name="**/*.xml"/>               
+            </patternset>
+            </fileset>            
+        </copy>
+        
+        <copy todir="${build.dest}/in/ac/dei/edrp/admissionsystem/databasesettings" overwrite="yes"
+           filtering="yes">
+            <fileset dir="${src.dir}/in/ac/dei/edrp/admissionsystem/databasesettings" >
+            <patternset>              
+                <include name="**/*.*"/>               
+            </patternset>
+            </fileset>
+            
+        </copy>
+
+
+         
+  </target>
+  
+ 
+
+  <!-- =================================================================== -->
+  <!-- C R E A T E  D I R E C T O R I E S    				   -->
+  <!-- =================================================================== -->
+
+  <target name="create-Dir" >
+      <mkdir dir="${build.dest}"/>
+      <!--<mkdir dir="${build.dest}/in/ac/dei/edrp/cms/propertiesFile"/>-->
+      
+  </target>
+
+  
+  <!-- =================================================================== -->
+  <!-- C O M P I L E                                                       -->
+  <!-- =================================================================== -->
+
+  <target
+    name="compile"
+    description="compiles the source code">
+    <echo message="####### inside compile ########### ${build.webappRoot}"/>
+    <mkdir dir="${build.dest}"/>
+    <javac srcdir="${src.dir}\in"
+        destdir="${build.dest}"
+        debug="${debug}"
+        deprecation="${deprecation}"
+        optimize="${optimize}">
+        <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- C L E A N                                                           -->
+  <!-- =================================================================== -->
+
+  <target
+    name="clean"
+    description="cleans up the build directory">
+    <delete dir="${build.dest}"/>
+    <mkdir dir="${build.dest}"/>
+  </target>
+  
+</project>
